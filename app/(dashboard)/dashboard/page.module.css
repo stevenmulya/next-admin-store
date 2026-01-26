@@ -1,0 +1,86 @@
+.container {
+  padding: 50px;
+}
+
+.header {
+  margin-bottom: 32px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #171717;
+  margin-bottom: 4px;
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: #737373;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+@media (min-width: 768px) {
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.section {
+  background-color: #ffffff;
+  padding: 24px;
+  border-radius: 6px;
+  border: 1px solid #e5e5e5;
+}
+
+.sectionTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #171717;
+  margin-bottom: 16px;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btnPrimary {
+  padding: 10px 16px;
+  background-color: #000000;
+  color: #ffffff;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid #000000;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btnPrimary:hover {
+  background-color: #262626;
+  border-color: #262626;
+}
+
+.btnSecondary {
+  padding: 10px 16px;
+  background-color: #ffffff;
+  color: #171717;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid #e5e5e5;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btnSecondary:hover {
+  background-color: #fafafa;
+  border-color: #d4d4d4;
+}

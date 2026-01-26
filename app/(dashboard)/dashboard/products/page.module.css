@@ -1,0 +1,143 @@
+.container {
+  width: 100%;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #171717;
+  letter-spacing: -0.02em;
+}
+
+.addButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #000000;
+  color: #ffffff;
+  padding: 10px 16px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+  border: 1px solid #000000;
+}
+
+.addButton:hover {
+  background-color: #262626;
+  border-color: #262626;
+}
+
+/* TABLE STYLES */
+.tableContainer {
+  background-color: #ffffff;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  overflow: hidden; /* Agar sudut tabel tumpul mengikuti container */
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.thead {
+  background-color: #fafafa;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.th {
+  padding: 14px 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #737373;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.tr {
+  border-bottom: 1px solid #e5e5e5;
+  transition: background-color 0.1s;
+}
+
+.tr:last-child {
+  border-bottom: none;
+}
+
+.tr:hover {
+  background-color: #fafafa;
+}
+
+.td {
+  padding: 16px 20px;
+  font-size: 14px;
+  color: #171717;
+  vertical-align: middle;
+}
+
+.productName {
+  font-weight: 500;
+  color: #000000;
+}
+
+.price {
+  font-family: 'Inter', monospace; /* Supaya angka rapi */
+  font-weight: 500;
+}
+
+/* ACTION BUTTONS */
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.actionBtn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e5e5e5;
+  background-color: #ffffff;
+  border-radius: 4px;
+  color: #171717;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.actionBtn:hover {
+  background-color: #f5f5f5;
+  border-color: #d4d4d4;
+}
+
+.deleteBtn:hover {
+  background-color: #000000;
+  border-color: #000000;
+  color: #ffffff;
+}
+
+/* STATE STATES */
+.loadingContainer {
+  padding: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #737373;
+}
+
+.emptyState {
+  padding: 60px;
+  text-align: center;
+  color: #737373;
+  font-size: 14px;
+}

@@ -3,10 +3,9 @@
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/services/api';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
+import styles from './page.module.css';
 import toast from 'react-hot-toast';
-import Link from 'next/link';
+import { Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
     const { login } = useAuth();
@@ -16,67 +15,62 @@ export default function LoginPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
+        
         try {
-            // Login ke Backend
             const { data } = await api.post('/users/login', formData);
-            
-            // Jika sukses, simpan data ke Context & Cookies
-            // data.token & data (user info) didapat dari response backend userController
             login(data.token, {
                 id: data._id,
                 name: data.name,
                 email: data.email,
                 isAdmin: data.isAdmin
             });
-            
-            toast.success('Login Successful!');
+            toast.success('Authentication Verified');
         } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Login Failed');
+            const errorMsg = error.response?.data?.message || 'Access Denied';
+            toast.error(errorMsg);
         } finally {
             setIsLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100">
-            <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
-                <div className="text-center mb-8">
-                    <h1 className="text-2xl font-bold text-gray-800">Welcome Back</h1>
-                    <p className="text-gray-500 text-sm">Sign in to manage your store</p>
+        <div className={styles.container}>
+            <div className={styles.card}>
+                <div className={styles.header}>
+                    <h1 className={styles.title}>Admin Portal</h1>
+                    <p className={styles.subtitle}>
+                        Please enter your credentials to access the management dashboard.
+                    </p>
                 </div>
 
                 <form onSubmit={handleSubmit}>
-                    <Input 
-                        label="Email Address"
-                        name="email"
-                        type="email"
-                        placeholder="admin@example.com"
-                        value={formData.email}
-                        onChange={(e) => setFormData({...formData, email: e.target.value})}
-                        required
-                    />
-                    
-                    <Input 
-                        label="Password"
-                        name="password"
-                        type="password"
-                        placeholder="••••••••"
-                        value={formData.password}
-                        onChange={(e) => setFormData({...formData, password: e.target.value})}
-                        required
-                    />
-
-                    <div className="mt-6">
-                        <Button type="submit" disabled={isLoading}>
-                            {isLoading ? 'Signing in...' : 'Sign In'}
-                        </Button>
+                    <div className={styles.formGroup}>
+                        <label className={styles.label}>Email</label>
+                        <input 
+                            className={styles.input}
+                            type="email"
+                            value={formData.email}
+                            onChange={(e) => setFormData({...formData, email: e.target.value})}
+                            required
+                            placeholder="user@organization.com"
+                        />
                     </div>
-                </form>
 
-                <div className="mt-4 text-center text-sm text-gray-500">
-                    <p>Default Admin: admin@example.com / 123456</p>
-                    <p>(Register via Swagger/Postman first)</p>
-                </div>
+                    <div className={styles.formGroup}>
+                        <label className={styles.label}>Password</label>
+                        <input 
+                            className={styles.input}
+                            type="password"
+                            value={formData.password}
+                            onChange={(e) => setFormData({...formData, password: e.target.value})}
+                            required
+                        />
+                    </div>
+
+                    <button type="submit" className={styles.submitBtn} disabled={isLoading}>
+                        {isLoading ? <Loader2 size={16} className="animate-spin mx-auto" /> : 'Sign In'}
+                    </button>
+                </form>
             </div>
         </div>
     );
