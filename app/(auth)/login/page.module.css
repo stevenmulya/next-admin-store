@@ -49,6 +49,12 @@
   margin-bottom: 8px;
 }
 
+.passwordWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
 .input {
   width: 100%;
   padding: 10px 12px;
@@ -62,13 +68,31 @@
   box-sizing: border-box;
 }
 
+.passwordWrapper .input {
+  padding-right: 45px;
+}
+
 .input:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 1px var(--primary);
 }
 
-.input::placeholder {
-  color: #a3a3a3;
+.eyeBtn {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  transition: color 0.2s;
+}
+
+.eyeBtn:hover {
+  color: var(--primary);
 }
 
 .submitBtn {

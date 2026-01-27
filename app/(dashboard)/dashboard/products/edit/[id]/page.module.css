@@ -203,6 +203,13 @@
   cursor: not-allowed;
 }
 
+.loadingFull {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+}
+
 @media (max-width: 640px) {
   .row {
     grid-template-columns: 1fr;

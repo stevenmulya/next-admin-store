@@ -4,7 +4,15 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { LayoutDashboard, Package, Users, LogOut, Settings, Command } from 'lucide-react';
+import { 
+    LayoutDashboard, 
+    Package, 
+    Users, 
+    LogOut, 
+    Settings, 
+    Command, 
+    Tags 
+} from 'lucide-react';
 import styles from './layout.module.css';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -14,6 +22,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const navigation = [
         { name: 'Overview', href: '/dashboard', icon: LayoutDashboard },
         { name: 'Products', href: '/dashboard/products', icon: Package },
+        { name: 'Categories', href: '/dashboard/categories', icon: Tags },
         { name: 'Users', href: '/dashboard/users', icon: Users },
         { name: 'Settings', href: '/dashboard/settings', icon: Settings },
     ];
@@ -29,7 +38,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <nav className={styles.nav}>
                     {navigation.map((item) => {
                         const Icon = item.icon;
-                        const isActive = pathname === item.href;
+                        
+                        // LOGIKA BARU: 
+                        // Jika href adalah root dashboard, harus sama persis.
+                        // Jika menu lain, gunakan startsWith agar sub-halaman tetap aktif.
+                        const isActive = item.href === '/dashboard' 
+                            ? pathname === '/dashboard' 
+                            : pathname.startsWith(item.href);
+                        
                         return (
                             <Link
                                 key={item.name}

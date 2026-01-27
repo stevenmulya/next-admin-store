@@ -5,12 +5,11 @@ import { getCookie, setCookie, deleteCookie } from 'cookies-next';
 import { useRouter } from 'next/navigation';
 import api from '@/services/api';
 
-// Sesuaikan dengan data dari Backend userController
 export interface User {
     id: number;
     name: string;
     email: string;
-    isAdmin: boolean;
+    level: number; 
 }
 
 interface AuthContextType {
@@ -32,8 +31,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             const token = getCookie('token');
             if (token) {
                 try {
-                    const { data } = await api.get('/users/profile');
-                    setUser(data);
+                    const response = await api.get('/users/profile');
+                    const userData = response.data.data; 
+                    setUser(userData);
                 } catch (error) {
                     deleteCookie('token');
                     setUser(null);
@@ -45,15 +45,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }, []);
 
     const login = (token: string, userData: User) => {
-        setCookie('token', token);
+        setCookie('token', token, { 
+            maxAge: 30 * 24 * 60 * 60,
+            path: '/',
+            sameSite: 'lax'
+        });
         setUser(userData);
-        router.push('/dashboard');
+        router.replace('/dashboard');
     };
 
     const logout = () => {
         deleteCookie('token');
         setUser(null);
-        router.push('/login');
+        router.replace('/login');
     };
 
     return (
