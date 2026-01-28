@@ -44,7 +44,7 @@
 .navLink {
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: space-between;
   padding: 10px 12px;
   border-radius: 6px;
   color: #a3a3a3;
@@ -52,22 +52,71 @@
   font-size: 14px;
   font-weight: 500;
   transition: all 0.2s ease;
+  cursor: pointer;
+  background-color: transparent;
 }
 
 .navLink:hover {
-  background-color: #171717;
+  background-color: #262626;
   color: #ffffff;
 }
 
 .activeLink {
-  background-color: #ffffff;
-  color: #000000;
+  background-color: #ffffff !important;
+  color: #000000 !important;
   font-weight: 600;
 }
 
 .activeLink:hover {
-  background-color: #ffffff;
-  color: #000000;
+  background-color: #f5f5f5 !important;
+  color: #000000 !important;
+}
+
+.linkContent {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.subMenu {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 2px;
+  margin-bottom: 2px;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+.subNavLink {
+  padding-left: 44px;
+  font-size: 13px;
+  justify-content: flex-start;
+  gap: 12px;
+}
+
+.subNavLink:hover {
+    background-color: #262626;
+    color: #fff;
+}
+
+.subNavLink.activeLink {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+}
+
+.chevron {
+  display: flex;
+  align-items: center;
+  color: #737373;
+}
+
+.activeLink .chevron {
+    color: #000000;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .sidebarFooter {

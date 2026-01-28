@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '@/services/api';
 import styles from './page.module.css';
-import { Plus, Trash2, FolderTree, Loader2, Tags } from 'lucide-react';
+import { Plus, Trash2, FolderTree, Loader2, Tags, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { notifyError } from '@/utils/toastHelper';
 
@@ -19,6 +19,7 @@ export default function CategoriesPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [formData, setFormData] = useState({ name: '', parent_id: '' });
+    const [searchQuery, setSearchQuery] = useState('');
 
     const fetchCategories = async () => {
         try {
@@ -32,6 +33,28 @@ export default function CategoriesPage() {
     };
 
     useEffect(() => { fetchCategories(); }, []);
+
+    const filterTree = (nodes: Category[], query: string): Category[] => {
+        if (!query) return nodes;
+
+        return nodes
+            .map(node => {
+                const isMatch = node.name.toLowerCase().includes(query.toLowerCase());
+
+                if (isMatch) {
+                    return node;
+                }
+
+                const filteredChildren = filterTree(node.children || [], query);
+
+                if (filteredChildren.length > 0) {
+                    return { ...node, children: filteredChildren };
+                }
+
+                return null;
+            })
+            .filter(Boolean) as Category[];
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -91,6 +114,8 @@ export default function CategoriesPage() {
         ));
     };
 
+    const displayedTree = filterTree(tree, searchQuery);
+
     return (
         <div className={styles.container}>
             <div className={styles.header}>
@@ -98,6 +123,7 @@ export default function CategoriesPage() {
                     <Tags size={24} />
                     <h1 className={styles.title}>Categories</h1>
                 </div>
+                <p className={styles.description}>Manage product hierarchy and organize items into logical groups for better navigation.</p>
             </div>
 
             <div className={styles.mainGrid}>
@@ -137,6 +163,20 @@ export default function CategoriesPage() {
 
                 <div className={styles.listSection}>
                     <div className={styles.card}>
+                        <div className={styles.tableHeader}>
+                            <h2 className={styles.cardTitle} style={{ marginBottom: 0 }}>Category List</h2>
+                            <div className={styles.searchWrapper}>
+                                <Search size={16} className={styles.searchIcon} />
+                                <input 
+                                    type="text" 
+                                    placeholder="Search categories..." 
+                                    className={styles.searchInput}
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
+                            </div>
+                        </div>
+
                         <div className={styles.tableWrapper}>
                             <table className={styles.table}>
                                 <thead>
@@ -149,9 +189,13 @@ export default function CategoriesPage() {
                                 <tbody>
                                     {isLoading ? (
                                         <tr><td colSpan={3} className={styles.loadingTd}><Loader2 className="animate-spin" /></td></tr>
-                                    ) : tree.length === 0 ? (
-                                        <tr><td colSpan={3} className={styles.emptyTd}>No categories found.</td></tr>
-                                    ) : renderRows(tree)}
+                                    ) : displayedTree.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={3} className={styles.emptyTd}>
+                                                {searchQuery ? 'No matching categories found.' : 'No categories found.'}
+                                            </td>
+                                        </tr>
+                                    ) : renderRows(displayedTree)}
                                 </tbody>
                             </table>
                         </div>

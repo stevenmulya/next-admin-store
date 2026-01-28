@@ -10,15 +10,22 @@ import toast from 'react-hot-toast';
 import { 
     Plus, Pencil, Trash2, Loader2, PackageOpen, 
     ImageIcon, Search, ArrowUpDown, AlertTriangle,
-    History, User
+    History, User, X, Clock,
+    Pin, Star
 } from 'lucide-react';
 import { useCategoryTree } from '@/hooks/useCategories';
 
 interface Product {
     id: number;
     name: string;
+    slug: string;
+    sku: string;
     price: number;
     brand: string;
+    is_published: boolean;
+    is_best_seller: boolean;
+    is_pinned: boolean;
+    similarities?: string;
     category_id: number;
     category?: {
         name: string;
@@ -45,6 +52,11 @@ export default function ProductsPage() {
     const [selectedParent, setSelectedParent] = useState<string>("all");
     const [selectedSub, setSelectedSub] = useState<string>("all");
 
+    const [historyData, setHistoryData] = useState<any[]>([]);
+    const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+    const [selectedProductName, setSelectedProductName] = useState("");
+    const [isHistoryLoading, setIsHistoryLoading] = useState(false);
+
     const fetchProducts = async () => {
         try {
             const response = await api.get('/products');
@@ -58,6 +70,20 @@ export default function ProductsPage() {
         }
     };
 
+    const fetchHistory = async (id: number, name: string) => {
+        setIsHistoryLoading(true);
+        setSelectedProductName(name);
+        setIsHistoryOpen(true);
+        try {
+            const response = await api.get(`/products/${id}/history`);
+            setHistoryData(response.data.data || []);
+        } catch (error) {
+            setHistoryData([]);
+        } finally {
+            setIsHistoryLoading(false);
+        }
+    };
+
     useEffect(() => {
         fetchProducts();
     }, []);
@@ -65,7 +91,8 @@ export default function ProductsPage() {
     const filteredAndSortedProducts = useMemo(() => {
         let result = products.filter(p => {
             const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                p.brand.toLowerCase().includes(searchQuery.toLowerCase());
+                                p.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                (p.sku && p.sku.toLowerCase().includes(searchQuery.toLowerCase()));
             
             let matchesCategory = true;
             if (selectedParent !== "all") {
@@ -84,6 +111,10 @@ export default function ProductsPage() {
         });
 
         return result.sort((a, b) => {
+            if (a.is_pinned !== b.is_pinned) {
+                return a.is_pinned ? -1 : 1;
+            }
+            
             const dateA = new Date(a.createdAt).getTime();
             const dateB = new Date(b.createdAt).getTime();
             return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
@@ -124,7 +155,10 @@ export default function ProductsPage() {
     return (
         <div className={styles.container}>
             <div className={styles.header}>
-                <h1 className={styles.title}>Inventory</h1>
+                <div className={styles.headerText}>
+                    <h1 className={styles.title}>Inventory</h1>
+                    <p className={styles.description}>Manage your entire product catalog, track stock levels, and view modification history.</p>
+                </div>
                 <Link href="/dashboard/products/add" className={styles.addButton}>
                     <Plus size={16} /> Add New
                 </Link>
@@ -135,7 +169,7 @@ export default function ProductsPage() {
                     <Search size={18} className={styles.searchIcon} />
                     <input 
                         type="text" 
-                        placeholder="Search product name or brand..." 
+                        placeholder="Search name, brand, or SKU..." 
                         className={styles.searchInput}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
@@ -232,9 +266,17 @@ export default function ProductsPage() {
                                                             <ImageIcon size={18} color="#d4d4d4" />
                                                         )}
                                                     </div>
-                                                    <div>
-                                                        <div className={styles.productName}>{product.name}</div>
-                                                        <div className={styles.brandName}>{product.brand}</div>
+                                                    <div className={styles.productInfo}>
+                                                        <div className={styles.nameRow}>
+                                                            {product.is_pinned && <Pin size={12} className={styles.pinIcon} fill="currentColor" />}
+                                                            <span className={styles.productName}>{product.name}</span>
+                                                            {product.is_best_seller && <Star size={12} className={styles.starIcon} fill="currentColor" />}
+                                                            {!product.is_published && <span className={styles.draftBadge}>Draft</span>}
+                                                        </div>
+                                                        <div className={styles.metaRow}>
+                                                            <span className={styles.sku}>SKU: {product.sku || '-'}</span>
+                                                            <span className={styles.brandName}>{product.brand}</span>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </td>
@@ -265,6 +307,9 @@ export default function ProductsPage() {
                                             </td>
                                             <td className={styles.td}>
                                                 <div className={styles.actions}>
+                                                    <button className={styles.actionBtn} onClick={() => fetchHistory(product.id, product.name)}>
+                                                        <History size={14} />
+                                                    </button>
                                                     <button className={styles.actionBtn} onClick={() => router.push(`/dashboard/products/edit/${product.id}`)}>
                                                         <Pencil size={14} />
                                                     </button>
@@ -281,6 +326,74 @@ export default function ProductsPage() {
                     </div>
                 )}
             </div>
+
+            {isHistoryOpen && (
+                <div className={styles.modalOverlay}>
+                    <div className={styles.historyDrawer}>
+                        <div className={styles.drawerHeader}>
+                            <div>
+                                <h2 className={styles.drawerTitle}>Product History</h2>
+                                <p className={styles.drawerSubtitle}>{selectedProductName}</p>
+                            </div>
+                            <button onClick={() => setIsHistoryOpen(false)} className={styles.closeBtn}>
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <div className={styles.drawerContent}>
+                            {isHistoryLoading ? (
+                                <div className={styles.centerLoading}><Loader2 className="animate-spin" /></div>
+                            ) : historyData.length === 0 ? (
+                                <div className={styles.emptyHistory}>
+                                    <Clock size={32} strokeWidth={1} />
+                                    <p>No activity logs found for this product.</p>
+                                </div>
+                            ) : (
+                                <div className={styles.timeline}>
+                                    {historyData.map((log) => {
+                                        let changes: any = {};
+                                        try {
+                                            changes = typeof log.changes === 'string' ? JSON.parse(log.changes) : log.changes;
+                                        } catch {
+                                            changes = {};
+                                        }
+
+                                        return (
+                                            <div key={log.id} className={styles.timelineItem}>
+                                                <div className={styles.timelinePoint}></div>
+                                                <div className={styles.timelineCard}>
+                                                    <div className={styles.timelineHeader}>
+                                                        <span className={styles.actionBadge}>{log.action}</span>
+                                                        <span className={styles.logTime}>{new Date(log.timestamp).toLocaleString('id-ID')}</span>
+                                                    </div>
+                                                    <p className={styles.logUser}>Performed by: <strong>{log.performed_by || 'System'}</strong></p>
+                                                    
+                                                    {changes?.updated_fields && Array.isArray(changes.updated_fields) && (
+                                                        <div className={styles.changesList}>
+                                                            <span className={styles.fieldName}>Modified Properties:</span>
+                                                            <div className={styles.tagWrapper}>
+                                                                {changes.updated_fields.map((field: string, idx: number) => (
+                                                                    <span key={idx} className={styles.fieldTag}>
+                                                                        {field}
+                                                                    </span>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {changes?.note && (
+                                                        <p className={styles.logDetails}>{changes.note}</p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

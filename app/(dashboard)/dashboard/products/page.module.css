@@ -8,8 +8,14 @@
 .header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 32px;
+}
+
+.headerText {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .title {
@@ -17,6 +23,15 @@
   font-weight: 700;
   color: #111;
   letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.description {
+  font-size: 14px;
+  color: #737373;
+  max-width: 600px;
+  margin: 0;
+  line-height: 1.5;
 }
 
 .addButton {
@@ -31,6 +46,7 @@
   gap: 8px;
   text-decoration: none;
   transition: opacity 0.2s;
+  flex-shrink: 0;
 }
 
 .addButton:hover {
@@ -233,10 +249,58 @@
   object-fit: cover;
 }
 
+.productInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.nameRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
 .productName {
   font-weight: 600;
   color: #111;
-  margin-bottom: 2px;
+}
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: #737373;
+}
+
+.sku {
+  font-family: monospace;
+  background: #f5f5f5;
+  padding: 1px 4px;
+  border-radius: 4px;
+  color: #555;
+  font-weight: 500;
+}
+
+.pinIcon {
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+.starIcon {
+  color: #eab308;
+  flex-shrink: 0;
+}
+
+.draftBadge {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: #e5e5e5;
+  color: #525252;
+  padding: 2px 6px;
+  border-radius: 4px;
 }
 
 .brandName {
@@ -354,6 +418,178 @@
   color: #888;
 }
 
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.historyDrawer {
+  width: 100%;
+  max-width: 450px;
+  background: #fff;
+  height: 100vh;
+  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.drawerHeader {
+  padding: 24px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.drawerTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111;
+}
+
+.drawerSubtitle {
+  font-size: 13px;
+  color: #737373;
+  margin-top: 2px;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  color: #a3a3a3;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.drawerContent {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  background: #fafafa;
+}
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  border-left: 1px solid #e5e5e5;
+  margin-left: 10px;
+  padding-left: 20px;
+}
+
+.timelineItem {
+  position: relative;
+}
+
+.timelinePoint {
+  position: absolute;
+  left: -25.5px;
+  top: 12px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #000;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px #000;
+}
+
+.timelineCard {
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.timelineHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.actionBadge {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 8px;
+  background: #000;
+  color: #fff;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.logTime {
+  font-size: 11px;
+  color: #a3a3a3;
+}
+
+.logUser {
+  font-size: 12px;
+  color: #555;
+  margin-bottom: 12px;
+}
+
+.changesList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px dashed #eee;
+}
+
+.fieldName {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #888;
+}
+
+.tagWrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.fieldTag {
+  font-size: 11px;
+  background: #f3f4f6;
+  color: #374151;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid #e5e7eb;
+}
+
+.logDetails {
+  font-size: 12px;
+  color: #666;
+  font-style: italic;
+}
+
+.centerLoading, .emptyHistory {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: #a3a3a3;
+}
+
+.emptyHistory p {
+  font-size: 14px;
+}
+
 @media (max-width: 1024px) {
   .searchWrapper {
     max-width: 100%;
@@ -361,6 +597,16 @@
 }
 
 @media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+  }
+  
+  .addButton {
+    justify-content: center;
+  }
+
   .subCategoryGroup {
     border-left: none;
     padding-left: 0;
