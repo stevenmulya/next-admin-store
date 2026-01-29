@@ -20,7 +20,6 @@ export default function AttributeForm({ templates, values, onChange }: Props) {
 
     return (
         <div className={styles.attrSection}>
-            <p className={styles.attrHeader}>Spesifikasi Tambahan</p>
             <div className={styles.row}>
                 {templates.map((t) => (
                     <div key={t.id} className={styles.formGroup}>
@@ -30,7 +29,7 @@ export default function AttributeForm({ templates, values, onChange }: Props) {
                             className={t.type === 'color' ? styles.colorInput : styles.input}
                             value={values[t.id] || ''}
                             onChange={(e) => onChange(t.id, e.target.value)}
-                            placeholder={`Masukkan ${t.name.toLowerCase()}...`}
+                            placeholder={`Enter ${t.name.toLowerCase()}...`}
                         />
                     </div>
                 ))}

@@ -193,7 +193,7 @@ export default function AttributeManagement() {
                                             <div className={styles.fieldGroup}>
                                                 <label className={styles.label}>Attribute Name</label>
                                                 <input 
-                                                    placeholder="e.g. Material, Voltage, Size" 
+                                                    placeholder="e.g. Material, Size" 
                                                     className={styles.input} 
                                                     value={f.name}
                                                     onChange={(e) => updateField(i, 'name', e.target.value)}

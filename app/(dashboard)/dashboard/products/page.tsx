@@ -33,6 +33,7 @@ interface Product {
     };
     images?: { url: string; is_primary: boolean }[];
     countInStock: number;
+    variants?: { price: number; stock: number }[];
     creator?: { name: string };
     editor?: { name: string };
     createdAt: string;
@@ -88,6 +89,23 @@ export default function ProductsPage() {
         fetchProducts();
     }, []);
 
+    // Helper: Hitung total stok dari semua variant
+    const getTotalStock = (p: Product) => {
+        if (p.variants && p.variants.length > 0) {
+            return p.variants.reduce((sum, v) => sum + (Number(v.stock) || 0), 0);
+        }
+        return Number(p.countInStock) || 0;
+    };
+
+    // Helper: Ambil harga terendah untuk display
+    const getDisplayPrice = (p: Product) => {
+        if (p.variants && p.variants.length > 0) {
+            const prices = p.variants.map(v => Number(v.price));
+            return Math.min(...prices);
+        }
+        return Number(p.price);
+    };
+
     const filteredAndSortedProducts = useMemo(() => {
         let result = products.filter(p => {
             const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -105,7 +123,8 @@ export default function ProductsPage() {
                 }
             }
 
-            const matchesStock = showLowStock ? p.countInStock < 5 : true;
+            const currentStock = getTotalStock(p);
+            const matchesStock = showLowStock ? currentStock < 5 : true;
             
             return matchesSearch && matchesCategory && matchesStock;
         });
@@ -148,7 +167,9 @@ export default function ProductsPage() {
         return new Date(dateString).toLocaleDateString('id-ID', {
             day: '2-digit',
             month: 'short',
-            year: 'numeric'
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
         });
     };
 
@@ -255,6 +276,9 @@ export default function ProductsPage() {
                             <tbody>
                                 {filteredAndSortedProducts.map((product) => {
                                     const isUpdated = product.updatedAt !== product.createdAt;
+                                    const totalStock = getTotalStock(product);
+                                    const displayPrice = getDisplayPrice(product);
+
                                     return (
                                         <tr key={product.id} className={styles.tr}>
                                             <td className={styles.td}>
@@ -267,14 +291,25 @@ export default function ProductsPage() {
                                                         )}
                                                     </div>
                                                     <div className={styles.productInfo}>
+                                                        <div className={styles.statusRow}>
+                                                            {product.is_pinned && (
+                                                                <span className={styles.badgePinned}>
+                                                                    <Pin size={10} fill="currentColor" /> Pinned
+                                                                </span>
+                                                            )}
+                                                            {product.is_best_seller && (
+                                                                <span className={styles.badgeBestSeller}>
+                                                                    <Star size={10} fill="currentColor" /> Best Seller
+                                                                </span>
+                                                            )}
+                                                            {!product.is_published && (
+                                                                <span className={styles.badgeDraft}>Draft</span>
+                                                            )}
+                                                        </div>
                                                         <div className={styles.nameRow}>
-                                                            {product.is_pinned && <Pin size={12} className={styles.pinIcon} fill="currentColor" />}
                                                             <span className={styles.productName}>{product.name}</span>
-                                                            {product.is_best_seller && <Star size={12} className={styles.starIcon} fill="currentColor" />}
-                                                            {!product.is_published && <span className={styles.draftBadge}>Draft</span>}
                                                         </div>
                                                         <div className={styles.metaRow}>
-                                                            <span className={styles.sku}>SKU: {product.sku || '-'}</span>
                                                             <span className={styles.brandName}>{product.brand}</span>
                                                         </div>
                                                     </div>
@@ -287,9 +322,12 @@ export default function ProductsPage() {
                                                 </div>
                                             </td>
                                             <td className={styles.td}>
-                                                <div className={styles.priceText}>${Number(product.price).toLocaleString()}</div>
-                                                <div className={product.countInStock < 5 ? styles.lowStockAlert : styles.inStock}>
-                                                    {product.countInStock} Units
+                                                <div className={styles.priceText}>
+                                                    {product.variants && product.variants.length > 0 && <span style={{fontSize: '11px', fontWeight: 400, color: '#666', marginRight: '4px'}}>from</span>}
+                                                    ${displayPrice.toLocaleString()}
+                                                </div>
+                                                <div className={totalStock < 5 ? styles.lowStockAlert : styles.inStock}>
+                                                    {totalStock} Units
                                                 </div>
                                             </td>
                                             <td className={styles.td}>
@@ -327,6 +365,7 @@ export default function ProductsPage() {
                 )}
             </div>
 
+            {/* HISTORY DRAWER: Enhanced to show robust details */}
             {isHistoryOpen && (
                 <div className={styles.modalOverlay}>
                     <div className={styles.historyDrawer}>
@@ -354,9 +393,7 @@ export default function ProductsPage() {
                                         let changes: any = {};
                                         try {
                                             changes = typeof log.changes === 'string' ? JSON.parse(log.changes) : log.changes;
-                                        } catch {
-                                            changes = {};
-                                        }
+                                        } catch { changes = {}; }
 
                                         return (
                                             <div key={log.id} className={styles.timelineItem}>
@@ -368,18 +405,27 @@ export default function ProductsPage() {
                                                     </div>
                                                     <p className={styles.logUser}>Performed by: <strong>{log.performed_by || 'System'}</strong></p>
                                                     
-                                                    {changes?.updated_fields && Array.isArray(changes.updated_fields) && (
-                                                        <div className={styles.changesList}>
-                                                            <span className={styles.fieldName}>Modified Properties:</span>
-                                                            <div className={styles.tagWrapper}>
+                                                    {/* --- FIX: More robust changes rendering --- */}
+                                                    <div className={styles.changesList}>
+                                                        {/* 1. Prioritize simple updated_fields list */}
+                                                        {changes?.updated_fields && Array.isArray(changes.updated_fields) && (
+                                                            <div className={styles.tagWrapper} style={{marginBottom: '8px'}}>
                                                                 {changes.updated_fields.map((field: string, idx: number) => (
-                                                                    <span key={idx} className={styles.fieldTag}>
-                                                                        {field}
-                                                                    </span>
+                                                                    <span key={idx} className={styles.fieldTag}>{field}</span>
                                                                 ))}
                                                             </div>
-                                                        </div>
-                                                    )}
+                                                        )}
+
+                                                        {/* 2. Render other detailed keys if they exist (handling data mess) */}
+                                                        {Object.entries(changes).map(([key, val]) => {
+                                                            if (key === 'updated_fields' || key === 'note') return null;
+                                                            return (
+                                                                <div key={key} style={{ fontSize: '12px', color: '#444', marginTop: '4px' }}>
+                                                                    <strong>{key}:</strong> {JSON.stringify(val)}
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
 
                                                     {changes?.note && (
                                                         <p className={styles.logDetails}>{changes.note}</p>

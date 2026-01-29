@@ -137,7 +137,7 @@ export default function CategoriesPage() {
                                     className={styles.input}
                                     value={formData.name}
                                     onChange={(e) => setFormData({...formData, name: e.target.value})}
-                                    placeholder="e.g. Perfume"
+                                    placeholder="Enter category name"
                                     required
                                 />
                             </div>

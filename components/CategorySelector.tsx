@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { ChevronDown, Search, X } from 'lucide-react';
 import styles from './CategorySelector.module.css';
 
 interface Category {
@@ -11,18 +12,97 @@ interface Category {
 
 interface Props {
     tree: Category[];
-    onSelect: (categoryId: number | null) => void;
-    initialId?: number;
+    onSelect: (id: number) => void;
+    selectedId?: number | null;
 }
 
-export default function CategorySelector({ tree, onSelect, initialId }: Props) {
-    const [selections, setSelections] = useState<number[]>([]);
+interface SearchableSelectProps {
+    options: Category[];
+    value: number | null;
+    onChange: (id: number) => void;
+    placeholder: string;
+    level: number;
+}
 
-    const findPath = (nodes: Category[], targetId: number, path: number[] = []): number[] | null => {
+const SearchableSelect = ({ options, value, onChange, placeholder, level }: SearchableSelectProps) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    const selectedOption = options.find(opt => opt.id === value);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const filteredOptions = options.filter(opt => 
+        opt.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    return (
+        <div className={styles.selectContainer} ref={containerRef} style={{ marginLeft: level * 0 }}>
+            <div 
+                className={`${styles.selectTrigger} ${isOpen ? styles.triggerActive : ''}`}
+                onClick={() => setIsOpen(!isOpen)}
+            >
+                <span className={selectedOption ? styles.textSelected : styles.textPlaceholder}>
+                    {selectedOption ? selectedOption.name : placeholder}
+                </span>
+                <ChevronDown size={16} className={styles.icon} />
+            </div>
+
+            {isOpen && (
+                <div className={styles.dropdown}>
+                    <div className={styles.searchInputWrapper}>
+                        <Search size={14} className={styles.searchIcon} />
+                        <input
+                            type="text"
+                            className={styles.searchInput}
+                            placeholder="Search..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            autoFocus
+                        />
+                    </div>
+                    <div className={styles.optionsList}>
+                        {filteredOptions.length > 0 ? (
+                            filteredOptions.map(option => (
+                                <div
+                                    key={option.id}
+                                    className={`${styles.option} ${option.id === value ? styles.optionSelected : ''}`}
+                                    onClick={() => {
+                                        onChange(option.id);
+                                        setIsOpen(false);
+                                        setSearchTerm('');
+                                    }}
+                                >
+                                    {option.name}
+                                </div>
+                            ))
+                        ) : (
+                            <div className={styles.noResults}>No results found</div>
+                        )}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+export default function CategorySelector({ tree, onSelect, selectedId }: Props) {
+    const [selectedPath, setSelectedPath] = useState<Category[]>([]);
+
+    const findPath = (nodes: Category[], targetId: number, path: Category[] = []): Category[] | null => {
         for (const node of nodes) {
-            if (node.id === targetId) return [...path, node.id];
+            if (node.id === targetId) return [...path, node];
             if (node.children) {
-                const found = findPath(node.children, targetId, [...path, node.id]);
+                const found = findPath(node.children, targetId, [...path, node]);
                 if (found) return found;
             }
         }
@@ -30,66 +110,82 @@ export default function CategorySelector({ tree, onSelect, initialId }: Props) {
     };
 
     useEffect(() => {
-        if (initialId && tree.length > 0) {
-            const path = findPath(tree, initialId);
-            if (path) setSelections(path);
+        if (selectedId && tree.length > 0) {
+            const path = findPath(tree, selectedId);
+            if (path) setSelectedPath(path);
+        } else if (!selectedId) {
+            setSelectedPath([]);
         }
-    }, [initialId, tree]);
+    }, [selectedId, tree]);
 
-    const handleDropdownChange = (level: number, id: number) => {
-        const newSelections = selections.slice(0, level);
-        if (id !== -1) {
-            newSelections.push(id);
-            onSelect(id);
-        } else {
-            const parentId = newSelections[level - 1] || null;
-            onSelect(parentId);
-        }
-        setSelections(newSelections);
+    const handleSelect = (level: number, categoryId: number) => {
+        const category = findCategoryById(tree, categoryId);
+        if (!category) return;
+
+        const newPath = [...selectedPath.slice(0, level), category];
+        setSelectedPath(newPath);
+        onSelect(category.id);
     };
 
-    const renderDropdowns = () => {
-        const dropdowns = [];
-        let currentOptions = tree;
+    const findCategoryById = (nodes: Category[], id: number): Category | null => {
+        for (const node of nodes) {
+            if (node.id === id) return node;
+            if (node.children) {
+                const found = findCategoryById(node.children, id);
+                if (found) return found;
+            }
+        }
+        return null;
+    };
 
-        dropdowns.push(
-            <div key="level-0" className={styles.group}>
-                <select
-                    className={styles.select}
-                    value={selections[0] || -1}
-                    onChange={(e) => handleDropdownChange(0, Number(e.target.value))}
-                >
-                    <option value={-1}>Select Category...</option>
-                    {tree.map(cat => (
-                        <option key={cat.id} value={cat.id}>{cat.name}</option>
-                    ))}
-                </select>
-            </div>
+    const renderSelectors = () => {
+        const selectors = [];
+        
+        let currentOptions = tree;
+        selectors.push(
+            <SearchableSelect
+                key="root"
+                level={0}
+                options={currentOptions}
+                value={selectedPath[0]?.id || null}
+                onChange={(id) => handleSelect(0, id)}
+                placeholder="Select Main Category"
+            />
         );
 
-        selections.forEach((selectedId, index) => {
-            const selectedNode = currentOptions.find(n => n.id === selectedId);
-            if (selectedNode && selectedNode.children && selectedNode.children.length > 0) {
-                currentOptions = selectedNode.children;
-                dropdowns.push(
-                    <div key={`level-${index + 1}`} className={styles.group}>
-                        <select
-                            className={styles.select}
-                            value={selections[index + 1] || -1}
-                            onChange={(e) => handleDropdownChange(index + 1, Number(e.target.value))}
-                        >
-                            <option value={-1}>Select Sub-Category...</option>
-                            {currentOptions.map(cat => (
-                                <option key={cat.id} value={cat.id}>{cat.name}</option>
-                            ))}
-                        </select>
-                    </div>
+        selectedPath.forEach((category, index) => {
+            if (category.children && category.children.length > 0) {
+                selectors.push(
+                    <SearchableSelect
+                        key={`level-${index + 1}`}
+                        level={index + 1}
+                        options={category.children}
+                        value={selectedPath[index + 1]?.id || null}
+                        onChange={(id) => handleSelect(index + 1, id)}
+                        placeholder={`Select Sub Category of ${category.name}`}
+                    />
                 );
             }
         });
 
-        return dropdowns;
+        return selectors;
     };
 
-    return <div className={styles.container}>{renderDropdowns()}</div>;
+    return (
+        <div className={styles.wrapper}>
+            {renderSelectors()}
+            {selectedPath.length > 0 && (
+                <div className={styles.summary}>
+                    Selected: <strong>{selectedPath[selectedPath.length - 1].name}</strong>
+                    <button 
+                        type="button" 
+                        onClick={() => { setSelectedPath([]); onSelect(0); }} 
+                        className={styles.resetBtn}
+                    >
+                        <X size={12} /> Clear
+                    </button>
+                </div>
+            )}
+        </div>
+    );
 }
