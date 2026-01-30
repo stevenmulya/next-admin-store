@@ -7,7 +7,7 @@ import api from '@/services/api';
 import styles from './page.module.css';
 import { notifyError } from '@/utils/toastHelper';
 import toast from 'react-hot-toast';
-import { Loader2, Plus, X, ArrowLeft, Info, Box, Layers, Tag } from 'lucide-react';
+import { Loader2, Plus, X, ArrowLeft, Box, Layers } from 'lucide-react';
 import CategorySelector from '@/components/CategorySelector';
 import AttributeForm from '@/components/AttributeForm';
 import VideoManager from '@/components/VideoManager';
@@ -36,7 +36,7 @@ export default function AddProductPage() {
         price: '',
         brand: '',
         category_id: null as number | null,
-        countInStock: '',
+        countInStock: '', // Di state namanya 'countInStock'
         description: '',
         similarities: '',
         weight: '',
@@ -75,10 +75,10 @@ export default function AddProductPage() {
 
     const generateSlug = (text: string) => {
         return text.toString().toLowerCase()
-            .replace(/\s+/g, '-')           
-            .replace(/[^\w\-]+/g, '')       
-            .replace(/\-\-+/g, '-')         
-            .replace(/^-+/, '')             
+            .replace(/\s+/g, '-')          
+            .replace(/[^\w\-]+/g, '')      
+            .replace(/\-\-+/g, '-')        
+            .replace(/^-+/, '')            
             .replace(/-+$/, '');            
     };
 
@@ -102,6 +102,18 @@ export default function AddProductPage() {
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
             const selectedFiles = Array.from(e.target.files);
+            
+            const invalidFiles = selectedFiles.filter(file => file.size > 5 * 1024 * 1024);
+            if (invalidFiles.length > 0) {
+                notifyError("One or more images exceed the 5MB limit");
+                return;
+            }
+
+            if (imageFiles.length + selectedFiles.length > 5) {
+                notifyError("You can only upload up to 5 images");
+                return;
+            }
+
             setImageFiles(prev => [...prev, ...selectedFiles].slice(0, 5));
         }
     };
@@ -110,21 +122,53 @@ export default function AddProductPage() {
         setImageFiles(prev => prev.filter((_, i) => i !== index));
     };
 
+    const validateForm = () => {
+        if (!formData.name.trim() || formData.name.length < 3) return "Product name must be at least 3 characters";
+        if (!formData.category_id) return "Please select a category";
+        if (imageFiles.length === 0) return "Please upload at least one image";
+        if (!formData.brand.trim()) return "Brand is required";
+
+        if (productType === 'simple') {
+            if (!formData.price || Number(formData.price) <= 0) return "Price must be greater than $0";
+            if (formData.countInStock === '' || Number(formData.countInStock) < 0) return "Stock cannot be negative";
+        }
+
+        if (productType === 'variable') {
+            if (variants.length === 0) return "Please generate at least one variant for variable products";
+            const invalidVariant = variants.find(v => Number(v.price) <= 0 || Number(v.stock) < 0);
+            if (invalidVariant) return `Variant ${invalidVariant.sku} has invalid price or stock`;
+        }
+
+        if (Number(formData.weight) < 0) return "Weight cannot be negative";
+        if (Number(formData.length) < 0 || Number(formData.width) < 0 || Number(formData.height) < 0) {
+            return "Dimensions cannot be negative";
+        }
+
+        return null;
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
-        if (!formData.category_id) return notifyError("Please select a category");
-        if (imageFiles.length === 0) return notifyError("Please upload at least one image");
-        
-        if (productType === 'variable' && variants.length === 0) {
-            return notifyError("Please generate at least one variant");
+        const error = validateForm();
+        if (error) {
+            notifyError(error);
+            return;
         }
 
         setIsLoading(true);
         const data = new FormData();
         
+        // --- PERBAIKAN DI SINI (MAPPING KEYS) ---
         Object.entries(formData).forEach(([key, value]) => {
-            if (value !== null) data.append(key, String(value));
+            if (value !== null && value !== '') {
+                // Jika key adalah 'countInStock', ubah jadi 'stock' agar backend mengerti
+                if (key === 'countInStock') {
+                    data.append('stock', String(value));
+                } else {
+                    data.append(key, String(value));
+                }
+            }
         });
         
         data.append('product_type', productType);
@@ -150,7 +194,12 @@ export default function AddProductPage() {
             toast.success('Product created successfully');
             router.push('/dashboard/products');
         } catch (error: any) {
-            notifyError(error.response?.data?.message || 'Failed to save product');
+            const message = error.response?.data?.message || 'Failed to save product';
+            if (message.includes(',')) {
+                message.split(',').forEach((err: string) => notifyError(err.trim()));
+            } else {
+                notifyError(message);
+            }
         } finally {
             setIsLoading(false);
         }
@@ -169,23 +218,21 @@ export default function AddProductPage() {
             </div>
 
             <div className={styles.mainGrid}>
-                {/* --- LEFT COLUMN --- */}
                 <div className={styles.leftColumn}>
-                    
                     <div className={styles.card}>
                         <h3 className={styles.cardTitle}>General Information</h3>
                         <div className={styles.formGroup}>
-                            <label className={styles.label}>Product Name</label>
-                            <input name="name" className={styles.input} value={formData.name} onChange={handleChange} required placeholder="Enter product name" />
+                            <label className={styles.label}>Product Name <span style={{color: 'red'}}>*</span></label>
+                            <input name="name" className={styles.input} value={formData.name} onChange={handleChange} placeholder="Enter product name" />
                         </div>
                         <div className={styles.formGroup}>
                             <label className={styles.label}>Description</label>
-                            <textarea name="description" className={styles.textarea} value={formData.description} onChange={handleChange} required placeholder="Enter product description" />
+                            <textarea name="description" className={styles.textarea} value={formData.description} onChange={handleChange} placeholder="Enter product description" />
                         </div>
                     </div>
 
                     <div className={styles.card}>
-                        <h3 className={styles.cardTitle}>Media (Images)</h3>
+                        <h3 className={styles.cardTitle}>Media (Images) <span style={{color: 'red'}}>*</span></h3>
                         <div className={styles.imageGrid}>
                             {previewUrls.map((url, index) => (
                                 <div key={index} className={styles.imageBox}>
@@ -198,9 +245,10 @@ export default function AddProductPage() {
                             ))}
                             {previewUrls.length < 5 && (
                                 <label className={styles.uploadPlaceholder}>
-                                    <input type="file" multiple onChange={handleFileChange} accept="image/*" hidden />
+                                    <input type="file" multiple onChange={handleFileChange} accept="image/png, image/jpeg, image/webp" hidden />
                                     <Plus size={24} />
                                     <span>Add Photo</span>
+                                    <span style={{fontSize: '10px', marginTop: '4px'}}>(Max 5MB)</span>
                                 </label>
                             )}
                         </div>
@@ -216,12 +264,29 @@ export default function AddProductPage() {
                             <h3 className={styles.cardTitle}>Pricing & Inventory</h3>
                             <div className={styles.row}>
                                 <div className={styles.formGroup}>
-                                    <label className={styles.label}>Price ($)</label>
-                                    <input name="price" type="number" className={styles.input} value={formData.price} onChange={handleChange} required placeholder="Enter price" />
+                                    <label className={styles.label}>Price ($) <span style={{color: 'red'}}>*</span></label>
+                                    <input 
+                                        name="price" 
+                                        type="number" 
+                                        step="0.01" 
+                                        className={styles.input} 
+                                        value={formData.price} 
+                                        onChange={handleChange} 
+                                        onWheel={(e) => e.currentTarget.blur()}
+                                        placeholder="e.g. 29.99" 
+                                    />
                                 </div>
                                 <div className={styles.formGroup}>
-                                    <label className={styles.label}>Stock</label>
-                                    <input name="countInStock" type="number" className={styles.input} value={formData.countInStock} onChange={handleChange} required placeholder="Enter stock" />
+                                    <label className={styles.label}>Stock <span style={{color: 'red'}}>*</span></label>
+                                    <input 
+                                        name="countInStock" 
+                                        type="number" 
+                                        className={styles.input} 
+                                        value={formData.countInStock} 
+                                        onChange={handleChange} 
+                                        onWheel={(e) => e.currentTarget.blur()}
+                                        placeholder="e.g. 50" 
+                                    />
                                 </div>
                             </div>
                             <div className={styles.row}>
@@ -230,8 +295,8 @@ export default function AddProductPage() {
                                     <input name="sku" className={styles.input} value={formData.sku} onChange={handleChange} placeholder="Enter SKU" />
                                 </div>
                                 <div className={styles.formGroup}>
-                                    <label className={styles.label}>Brand</label>
-                                    <input name="brand" className={styles.input} value={formData.brand} onChange={handleChange} required placeholder="Enter brand" />
+                                    <label className={styles.label}>Brand <span style={{color: 'red'}}>*</span></label>
+                                    <input name="brand" className={styles.input} value={formData.brand} onChange={handleChange} placeholder="Enter brand" />
                                 </div>
                             </div>
                         </div>
@@ -242,13 +307,13 @@ export default function AddProductPage() {
                                 Variants Generator
                             </h3>
                             <p className={styles.helperText} style={{ marginBottom: '16px' }}>
-                                Create variants like Size/Color. Inventory and Price are managed per variant.
+                                Create variants like Size/Color. Inventory and Price ($) are managed per variant.
                             </p>
                             <VariantManager variants={variants} onChange={setVariants} />
                             
                             <div className={styles.formGroup} style={{ marginTop: '20px' }}>
-                                <label className={styles.label}>Brand</label>
-                                <input name="brand" className={styles.input} value={formData.brand} onChange={handleChange} required placeholder="Enter brand" />
+                                <label className={styles.label}>Brand <span style={{color: 'red'}}>*</span></label>
+                                <input name="brand" className={styles.input} value={formData.brand} onChange={handleChange} placeholder="Enter brand" />
                             </div>
                         </div>
                     )}
@@ -261,14 +326,14 @@ export default function AddProductPage() {
                         <div className={styles.row}>
                             <div className={styles.formGroup}>
                                 <label className={styles.label}>Weight (Gram)</label>
-                                <input name="weight" type="number" className={styles.input} value={formData.weight} onChange={handleChange} placeholder="e.g. 500" />
+                                <input name="weight" type="number" onWheel={(e) => e.currentTarget.blur()} className={styles.input} value={formData.weight} onChange={handleChange} placeholder="e.g. 500" />
                             </div>
                             <div className={styles.formGroup}>
                                 <label className={styles.label}>Dimensions (L x W x H) cm</label>
                                 <div style={{ display: 'flex', gap: '10px' }}>
-                                    <input name="length" type="number" placeholder="L" className={styles.input} value={formData.length} onChange={handleChange} />
-                                    <input name="width" type="number" placeholder="W" className={styles.input} value={formData.width} onChange={handleChange} />
-                                    <input name="height" type="number" placeholder="H" className={styles.input} value={formData.height} onChange={handleChange} />
+                                    <input name="length" type="number" onWheel={(e) => e.currentTarget.blur()} placeholder="L" className={styles.input} value={formData.length} onChange={handleChange} />
+                                    <input name="width" type="number" onWheel={(e) => e.currentTarget.blur()} placeholder="W" className={styles.input} value={formData.width} onChange={handleChange} />
+                                    <input name="height" type="number" onWheel={(e) => e.currentTarget.blur()} placeholder="H" className={styles.input} value={formData.height} onChange={handleChange} />
                                 </div>
                             </div>
                         </div>
@@ -282,12 +347,10 @@ export default function AddProductPage() {
                     )}
                 </div>
 
-                {/* --- RIGHT COLUMN --- */}
                 <div className={styles.rightColumn}>
                     <div className={styles.card}>
                         <h3 className={styles.cardTitle}>Status & Visibility</h3>
 
-                        {/* --- PRODUCT TYPE SELECTOR (Moved Here) --- */}
                         <div className={styles.formGroup} style={{ marginBottom: '20px', paddingBottom: '20px', borderBottom: '1px solid #f5f5f5' }}>
                             <label className={styles.label} style={{ marginBottom: '12px' }}>Product Type</label>
                             
@@ -353,7 +416,7 @@ export default function AddProductPage() {
                     </div>
 
                     <div className={styles.card}>
-                        <h3 className={styles.cardTitle}>Organization</h3>
+                        <h3 className={styles.cardTitle}>Organization <span style={{color: 'red'}}>*</span></h3>
                         <div className={styles.formGroup}>
                             <label className={styles.label}>Category</label>
                             {categoriesLoading ? (

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '@/services/api';
 import styles from './page.module.css';
-import { Plus, Trash2, FolderTree, Loader2, Tags, Search } from 'lucide-react';
+import { Plus, Trash2, FolderTree, Loader2, Tags, Search, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { notifyError } from '@/utils/toastHelper';
 
@@ -20,6 +20,11 @@ export default function CategoriesPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [formData, setFormData] = useState({ name: '', parent_id: '' });
     const [searchQuery, setSearchQuery] = useState('');
+    
+    const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; id: number | null }>({
+        isOpen: false,
+        id: null
+    });
 
     const fetchCategories = async () => {
         try {
@@ -76,15 +81,22 @@ export default function CategoriesPage() {
         }
     };
 
-    const handleDelete = async (id: number) => {
-        if (!confirm("Are you sure? This may affect sub-categories.")) return;
+    const initiateDelete = (id: number) => {
+        setDeleteModal({ isOpen: true, id });
+    };
+
+    const confirmDelete = async () => {
+        if (deleteModal.id === null) return;
+
         try {
-            await api.delete(`/categories/${id}`);
+            await api.delete(`/categories/${deleteModal.id}`);
             toast.success("Category deleted");
             fetchCategories();
         } catch (error: any) {
             const message = error.response?.data?.message || "Could not delete category";
             notifyError(message);
+        } finally {
+            setDeleteModal({ isOpen: false, id: null });
         }
     };
 
@@ -104,7 +116,7 @@ export default function CategoriesPage() {
                         </span>
                     </td>
                     <td className={styles.td} style={{ textAlign: 'right' }}>
-                        <button onClick={() => handleDelete(cat.id)} className={styles.deleteBtn}>
+                        <button onClick={() => initiateDelete(cat.id)} className={styles.deleteBtn}>
                             <Trash2 size={16} />
                         </button>
                     </td>
@@ -202,6 +214,36 @@ export default function CategoriesPage() {
                     </div>
                 </div>
             </div>
+
+            {deleteModal.isOpen && (
+                <div className={styles.modalOverlay}>
+                    <div className={styles.modalContent}>
+                        <div className={styles.modalHeader}>
+                            <AlertTriangle size={32} />
+                            <h3 className={styles.modalTitle}>Confirm Deletion</h3>
+                        </div>
+                        <div className={styles.modalBody}>
+                            <p>You are about to delete a category.</p>
+                            <p><strong>Warning:</strong> If this category has sub-categories, they will also be deleted or detached. Products linked to this category will become uncategorized.</p>
+                            <p>Are you sure you want to proceed?</p>
+                        </div>
+                        <div className={styles.modalActions}>
+                            <button 
+                                className={styles.btnCancel} 
+                                onClick={() => setDeleteModal({ isOpen: false, id: null })}
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                className={styles.btnConfirm} 
+                                onClick={confirmDelete}
+                            >
+                                Yes, Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

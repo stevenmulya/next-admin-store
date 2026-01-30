@@ -6,8 +6,8 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    router.push('/dashboard'); // Middleware akan otomatis lempar ke /login jika belum auth
+    router.push('/dashboard'); 
   }, [router]);
 
-  return null; // Tidak merender apa-apa
+  return null; 
 }

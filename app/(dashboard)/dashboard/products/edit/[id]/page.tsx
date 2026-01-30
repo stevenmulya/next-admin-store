@@ -4,10 +4,10 @@ import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import api from '@/services/api';
-import styles from './page.module.css'; // Gunakan CSS yang sama dengan Add Page
+import styles from './page.module.css';
 import { notifyError } from '@/utils/toastHelper';
 import toast from 'react-hot-toast';
-import { Loader2, Plus, X, ArrowLeft, Info, Box, Layers, Trash2 } from 'lucide-react';
+import { Loader2, Plus, X, ArrowLeft, Box, Layers, Trash2 } from 'lucide-react';
 import CategorySelector from '@/components/CategorySelector';
 import AttributeForm from '@/components/AttributeForm';
 import VideoManager from '@/components/VideoManager';
@@ -22,19 +22,14 @@ export default function EditProductPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     
-    // --- IMAGES STATE ---
-    // Gambar lama (dari Database)
     const [existingImages, setExistingImages] = useState<{ id: number, url: string, is_primary: boolean }[]>([]);
-    // Gambar baru (Upload)
     const [imageFiles, setImageFiles] = useState<File[]>([]);
     const [previewUrls, setPreviewUrls] = useState<string[]>([]);
     
-    // --- ATTRIBUTES & VIDEOS ---
     const [attrTemplates, setAttrTemplates] = useState([]);
     const [attrValues, setAttrValues] = useState<Record<number, any>>({});
     const [videos, setVideos] = useState<{ video_url: string, title: string, provider: string }[]>([]);
     
-    // --- PRODUCT TYPE & VARIANTS ---
     const [productType, setProductType] = useState<'simple' | 'variable'>('simple');
     const [variants, setVariants] = useState<VariantItem[]>([]);
 
@@ -57,42 +52,40 @@ export default function EditProductPage() {
         is_best_seller: false
     });
 
-    // 1. FETCH PRODUCT DETAILS
     useEffect(() => {
         const fetchProduct = async () => {
             try {
                 const res = await api.get(`/products/${params.id}`);
                 const p = res.data.data;
 
-                // Populate Basic Info
+                // PERBAIKAN DI SINI: Gunakan ( ?? '' ) untuk menangani null/undefined dari API
+                // Kita juga mapping p.stock ke countInStock jika p.countInStock undefined
                 setFormData({
-                    name: p.name,
-                    slug: p.slug,
-                    sku: p.sku || '',
-                    price: p.price,
-                    brand: p.brand || '',
-                    category_id: p.category_id,
-                    countInStock: p.countInStock,
-                    description: p.description || '',
-                    similarities: p.similarities || '',
-                    weight: p.weight || '',
-                    length: p.length || '',
-                    width: p.width || '',
-                    height: p.height || '',
-                    is_published: p.is_published,
-                    is_pinned: p.is_pinned,
-                    is_best_seller: p.is_best_seller
+                    name: p.name ?? '',
+                    slug: p.slug ?? '',
+                    sku: p.sku ?? '',
+                    price: p.price ?? '',
+                    brand: p.brand ?? '',
+                    category_id: p.category_id ?? null,
+                    // Prioritaskan p.stock jika countInStock tidak ada
+                    countInStock: p.countInStock ?? p.stock ?? '', 
+                    description: p.description ?? '',
+                    similarities: p.similarities ?? '',
+                    weight: p.weight ?? '',
+                    length: p.length ?? '',
+                    width: p.width ?? '',
+                    height: p.height ?? '',
+                    is_published: !!p.is_published, // Paksa jadi boolean
+                    is_pinned: !!p.is_pinned,
+                    is_best_seller: !!p.is_best_seller
                 });
 
-                // Populate Type
                 setProductType(p.product_type || 'simple');
 
-                // Populate Images
                 if (p.images) {
                     setExistingImages(p.images);
                 }
 
-                // Populate Videos
                 if (p.videos) {
                     setVideos(p.videos.map((v: any) => ({
                         video_url: v.video_url,
@@ -101,7 +94,6 @@ export default function EditProductPage() {
                     })));
                 }
 
-                // Populate Variants
                 if (p.variants && p.variants.length > 0) {
                     setVariants(p.variants.map((v: any) => ({
                         sku: v.sku,
@@ -112,13 +104,11 @@ export default function EditProductPage() {
                     })));
                 }
 
-                // Populate Attributes
                 if (p.attributeValues) {
                     const mappedAttrs: Record<number, any> = {};
                     p.attributeValues.forEach((av: any) => {
-                        // Pastikan structure attribute value sesuai response API
                         if (av.template) {
-                            mappedAttrs[av.attribute_template_id] = av.value; // Sesuaikan field 'value' dengan DB
+                            mappedAttrs[av.attribute_template_id] = av.value;
                         }
                     });
                     setAttrValues(mappedAttrs);
@@ -135,7 +125,6 @@ export default function EditProductPage() {
         if (params.id) fetchProduct();
     }, [params.id, router]);
 
-    // 2. FETCH ATTRIBUTE TEMPLATES WHEN CATEGORY CHANGES
     useEffect(() => {
         if (formData.category_id) {
             const fetchAttr = async () => {
@@ -150,7 +139,6 @@ export default function EditProductPage() {
         }
     }, [formData.category_id]);
 
-    // 3. PREVIEW NEW IMAGES
     useEffect(() => {
         if (imageFiles.length > 0) {
             const urls = imageFiles.map(file => URL.createObjectURL(file));
@@ -161,14 +149,12 @@ export default function EditProductPage() {
         }
     }, [imageFiles]);
 
-    // --- HANDLERS ---
-
     const generateSlug = (text: string) => {
         return text.toString().toLowerCase()
-            .replace(/\s+/g, '-')           
-            .replace(/[^\w\-]+/g, '')       
-            .replace(/\-\-+/g, '-')         
-            .replace(/^-+/, '')             
+            .replace(/\s+/g, '-')          
+            .replace(/[^\w\-]+/g, '')      
+            .replace(/\-\-+/g, '-')        
+            .replace(/^-+/, '')            
             .replace(/-+$/, '');            
     };
 
@@ -189,11 +175,22 @@ export default function EditProductPage() {
         setAttrValues(prev => ({ ...prev, [id]: value }));
     };
 
-    // Handling New Files
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
             const selectedFiles = Array.from(e.target.files);
-            setImageFiles(prev => [...prev, ...selectedFiles].slice(0, 5));
+            
+            const invalidFiles = selectedFiles.filter(file => file.size > 5 * 1024 * 1024);
+            if (invalidFiles.length > 0) {
+                notifyError("One or more images exceed the 5MB limit");
+                return;
+            }
+
+            if (existingImages.length + imageFiles.length + selectedFiles.length > 5) {
+                notifyError("Total images cannot exceed 5");
+                return;
+            }
+
+            setImageFiles(prev => [...prev, ...selectedFiles]);
         }
     };
 
@@ -201,39 +198,65 @@ export default function EditProductPage() {
         setImageFiles(prev => prev.filter((_, i) => i !== index));
     };
 
-    // Handling Existing Images (Delete via API directly or mark for deletion)
-    // Untuk simplifikasi, kita delete langsung via API jika user klik hapus
     const removeExistingImage = async (imageId: number) => {
-        if(!confirm("Delete this image permanently?")) return;
+        if(!confirm("Are you sure you want to delete this image?")) return;
         try {
-            // Asumsi ada endpoint delete image, jika tidak ada, skip step ini atau sesuaikan backend
-            // await api.delete(`/products/images/${imageId}`); 
-            // Jika backend updateProduct menghandle sync gambar, kita cukup filter state:
+            await api.delete(`/products/images/${imageId}`); 
             setExistingImages(prev => prev.filter(img => img.id !== imageId));
-            // Note: Backend 'editProduct' saat ini melakukan 'bulkCreateImages' untuk file baru, 
-            // tapi tidak secara eksplisit menghapus gambar lama kecuali kita kirim list ID yang dipertahankan.
-            // *Solusi Backend yang ideal*: Kirim array 'kept_image_ids'.
-            // Namun untuk sekarang kita manipulasi UI saja.
+            toast.success("Image removed");
         } catch (error) {
-            notifyError("Failed to remove image");
+            notifyError("Failed to delete image. It might be linked to orders.");
         }
+    };
+
+    const validateForm = () => {
+        if (!formData.name.trim() || formData.name.length < 3) return "Product name must be at least 3 characters";
+        
+        if (!formData.category_id) return "Please select a category";
+        
+        if (existingImages.length === 0 && imageFiles.length === 0) return "Please have at least one image";
+        
+        if (!formData.brand.trim()) return "Brand is required";
+
+        if (productType === 'simple') {
+            if (!formData.price || Number(formData.price) <= 0) return "Price must be greater than $0";
+            if (formData.countInStock === '' || Number(formData.countInStock) < 0) return "Stock cannot be negative";
+        }
+
+        if (productType === 'variable') {
+            if (variants.length === 0) return "Please generate at least one variant for variable products";
+            const invalidVariant = variants.find(v => Number(v.price) <= 0 || Number(v.stock) < 0);
+            if (invalidVariant) return `Variant ${invalidVariant.sku} has invalid price or stock`;
+        }
+
+        if (Number(formData.weight) < 0) return "Weight cannot be negative";
+        if (Number(formData.length) < 0 || Number(formData.width) < 0 || Number(formData.height) < 0) {
+            return "Dimensions cannot be negative";
+        }
+
+        return null;
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
-        if (!formData.category_id) return notifyError("Please select a category");
-        
-        // Validasi Varian
-        if (productType === 'variable' && variants.length === 0) {
-            return notifyError("Please generate at least one variant");
+        const error = validateForm();
+        if (error) {
+            notifyError(error);
+            return;
         }
 
         setIsSaving(true);
         const data = new FormData();
         
+        // PENTING: Backend mengharapkan 'stock', tapi state kita 'countInStock'
+        // Kita harus mapping saat kirim
         Object.entries(formData).forEach(([key, value]) => {
-            if (value !== null) data.append(key, String(value));
+            if (key === 'countInStock') {
+                 data.append('stock', String(value));
+            } else if (value !== null && value !== '') {
+                data.append(key, String(value));
+            }
         });
         
         data.append('product_type', productType);
@@ -248,14 +271,9 @@ export default function EditProductPage() {
             data.append('variants', JSON.stringify(variants));
         }
 
-        // Upload Gambar Baru
         imageFiles.forEach((file) => {
             data.append('images', file);
         });
-        
-        // Kirim ID gambar lama yang masih ada (Agar backend tahu mana yang dihapus jika backend support sync)
-        // Jika backend belum support sync images (hanya add new), gambar lama tidak akan hilang walau dihapus di UI.
-        // Anda perlu menambahkan logic 'deleteImagesByProductId' dan re-insert atau logic 'sync' di backend.
         
         try {
             await api.put(`/products/${params.id}`, data, {
@@ -264,7 +282,12 @@ export default function EditProductPage() {
             toast.success('Product updated successfully');
             router.push('/dashboard/products');
         } catch (error: any) {
-            notifyError(error.response?.data?.message || 'Failed to update product');
+            const message = error.response?.data?.message || 'Failed to update product';
+            if (message.includes(',')) {
+                message.split(',').forEach((err: string) => notifyError(err.trim()));
+            } else {
+                notifyError(message);
+            }
         } finally {
             setIsSaving(false);
         }
@@ -291,13 +314,12 @@ export default function EditProductPage() {
             </div>
 
             <div className={styles.mainGrid}>
-                {/* --- LEFT COLUMN --- */}
                 <div className={styles.leftColumn}>
                     
                     <div className={styles.card}>
                         <h3 className={styles.cardTitle}>General Information</h3>
                         <div className={styles.formGroup}>
-                            <label className={styles.label}>Product Name</label>
+                            <label className={styles.label}>Product Name <span style={{color: 'red'}}>*</span></label>
                             <input name="name" className={styles.input} value={formData.name} onChange={handleChange} required placeholder="Enter product name" />
                         </div>
                         <div className={styles.formGroup}>
@@ -307,9 +329,8 @@ export default function EditProductPage() {
                     </div>
 
                     <div className={styles.card}>
-                        <h3 className={styles.cardTitle}>Media (Images)</h3>
+                        <h3 className={styles.cardTitle}>Media (Images) <span style={{color: 'red'}}>*</span></h3>
                         <div className={styles.imageGrid}>
-                            {/* Existing Images */}
                             {existingImages.map((img) => (
                                 <div key={img.id} className={styles.imageBox}>
                                     <img src={getImageUrl(img.url)} alt="Existing" className={styles.previewImg} />
@@ -320,7 +341,6 @@ export default function EditProductPage() {
                                 </div>
                             ))}
 
-                            {/* New Images */}
                             {previewUrls.map((url, index) => (
                                 <div key={`new-${index}`} className={styles.imageBox}>
                                     <img src={url} alt="Preview" className={styles.previewImg} />
@@ -331,11 +351,12 @@ export default function EditProductPage() {
                                 </div>
                             ))}
 
-                            {(existingImages.length + previewUrls.length) < 8 && (
+                            {(existingImages.length + previewUrls.length) < 5 && (
                                 <label className={styles.uploadPlaceholder}>
-                                    <input type="file" multiple onChange={handleFileChange} accept="image/*" hidden />
+                                    <input type="file" multiple onChange={handleFileChange} accept="image/png, image/jpeg, image/webp" hidden />
                                     <Plus size={24} />
                                     <span>Add Photo</span>
+                                    <span style={{fontSize: '10px', marginTop: '4px'}}>(Max 5MB)</span>
                                 </label>
                             )}
                         </div>
@@ -351,12 +372,32 @@ export default function EditProductPage() {
                             <h3 className={styles.cardTitle}>Pricing & Inventory</h3>
                             <div className={styles.row}>
                                 <div className={styles.formGroup}>
-                                    <label className={styles.label}>Price ($)</label>
-                                    <input name="price" type="number" className={styles.input} value={formData.price} onChange={handleChange} required placeholder="Enter price" />
+                                    <label className={styles.label}>Price ($) <span style={{color: 'red'}}>*</span></label>
+                                    <input 
+                                        name="price" 
+                                        type="number" 
+                                        step="0.01"
+                                        className={styles.input} 
+                                        value={formData.price} 
+                                        onChange={handleChange} 
+                                        onWheel={(e) => e.currentTarget.blur()}
+                                        required 
+                                        placeholder="e.g. 29.99" 
+                                    />
                                 </div>
                                 <div className={styles.formGroup}>
-                                    <label className={styles.label}>Stock</label>
-                                    <input name="countInStock" type="number" className={styles.input} value={formData.countInStock} onChange={handleChange} required placeholder="Enter stock" />
+                                    <label className={styles.label}>Stock <span style={{color: 'red'}}>*</span></label>
+                                    {/* VALUE DIJAMIN TIDAK UNDEFINED KARENA SUDAH DITANGANI DI USEEFFECT */}
+                                    <input 
+                                        name="countInStock" 
+                                        type="number" 
+                                        className={styles.input} 
+                                        value={formData.countInStock} 
+                                        onChange={handleChange}
+                                        onWheel={(e) => e.currentTarget.blur()} 
+                                        required 
+                                        placeholder="Enter stock" 
+                                    />
                                 </div>
                             </div>
                             <div className={styles.row}>
@@ -365,7 +406,7 @@ export default function EditProductPage() {
                                     <input name="sku" className={styles.input} value={formData.sku} onChange={handleChange} placeholder="Enter SKU" />
                                 </div>
                                 <div className={styles.formGroup}>
-                                    <label className={styles.label}>Brand</label>
+                                    <label className={styles.label}>Brand <span style={{color: 'red'}}>*</span></label>
                                     <input name="brand" className={styles.input} value={formData.brand} onChange={handleChange} required placeholder="Enter brand" />
                                 </div>
                             </div>
@@ -382,7 +423,7 @@ export default function EditProductPage() {
                             <VariantManager variants={variants} onChange={setVariants} />
                             
                             <div className={styles.formGroup} style={{ marginTop: '20px' }}>
-                                <label className={styles.label}>Brand</label>
+                                <label className={styles.label}>Brand <span style={{color: 'red'}}>*</span></label>
                                 <input name="brand" className={styles.input} value={formData.brand} onChange={handleChange} required placeholder="Enter brand" />
                             </div>
                         </div>
@@ -396,14 +437,14 @@ export default function EditProductPage() {
                         <div className={styles.row}>
                             <div className={styles.formGroup}>
                                 <label className={styles.label}>Weight (Gram)</label>
-                                <input name="weight" type="number" className={styles.input} value={formData.weight} onChange={handleChange} placeholder="e.g. 500" />
+                                <input name="weight" type="number" onWheel={(e) => e.currentTarget.blur()} className={styles.input} value={formData.weight} onChange={handleChange} placeholder="e.g. 500" />
                             </div>
                             <div className={styles.formGroup}>
                                 <label className={styles.label}>Dimensions (L x W x H) cm</label>
                                 <div style={{ display: 'flex', gap: '10px' }}>
-                                    <input name="length" type="number" placeholder="L" className={styles.input} value={formData.length} onChange={handleChange} />
-                                    <input name="width" type="number" placeholder="W" className={styles.input} value={formData.width} onChange={handleChange} />
-                                    <input name="height" type="number" placeholder="H" className={styles.input} value={formData.height} onChange={handleChange} />
+                                    <input name="length" type="number" onWheel={(e) => e.currentTarget.blur()} placeholder="L" className={styles.input} value={formData.length} onChange={handleChange} />
+                                    <input name="width" type="number" onWheel={(e) => e.currentTarget.blur()} placeholder="W" className={styles.input} value={formData.width} onChange={handleChange} />
+                                    <input name="height" type="number" onWheel={(e) => e.currentTarget.blur()} placeholder="H" className={styles.input} value={formData.height} onChange={handleChange} />
                                 </div>
                             </div>
                         </div>
@@ -417,7 +458,6 @@ export default function EditProductPage() {
                     )}
                 </div>
 
-                {/* --- RIGHT COLUMN --- */}
                 <div className={styles.rightColumn}>
                     <div className={styles.card}>
                         <h3 className={styles.cardTitle}>Status & Visibility</h3>
@@ -435,6 +475,7 @@ export default function EditProductPage() {
                                 />
                                 <div>
                                     <span style={{ fontSize: '14px', fontWeight: 500, display: 'block' }}>Simple Product</span>
+                                    <span style={{ fontSize: '11px', color: '#666' }}>Standard item with one SKU</span>
                                 </div>
                             </label>
 
@@ -448,6 +489,7 @@ export default function EditProductPage() {
                                 />
                                 <div>
                                     <span style={{ fontSize: '14px', fontWeight: 500, display: 'block' }}>Product with Variants</span>
+                                    <span style={{ fontSize: '11px', color: '#666' }}>Has colors, sizes, etc.</span>
                                 </div>
                             </label>
                         </div>
@@ -485,7 +527,7 @@ export default function EditProductPage() {
                     </div>
 
                     <div className={styles.card}>
-                        <h3 className={styles.cardTitle}>Organization</h3>
+                        <h3 className={styles.cardTitle}>Organization <span style={{color: 'red'}}>*</span></h3>
                         <div className={styles.formGroup}>
                             <label className={styles.label}>Category</label>
                             {categoriesLoading ? (
