@@ -69,3 +69,45 @@ export const notifyError = (message: string) => {
         },
     });
 };
+
+export const notifySuccess = (message: string) => {
+    toast.success((t) => (
+        <div style={{ width: '100%', minWidth: '240px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <span style={{ fontSize: '13px', fontWeight: 500, color: '#ffffff', lineHeight: '1.4', paddingRight: '10px' }}>
+                {message}
+            </span>
+            
+            <button 
+                onClick={() => toast.dismiss(t.id)}
+                style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#737373',
+                    cursor: 'pointer',
+                    padding: '0',
+                    marginTop: '2px',
+                    display: 'flex',
+                    flexShrink: 0
+                }}
+            >
+                <X size={14} />
+            </button>
+        </div>
+    ), { 
+        id: message,
+        duration: 4000,
+        position: 'bottom-right',
+        style: {
+            background: '#0a0a0a',
+            border: '1px solid #262626',
+            color: '#ffffff',
+            borderRadius: '4px',
+            padding: '12px 16px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
+        },
+        iconTheme: {
+            primary: '#ffffff',
+            secondary: '#000000',
+        },
+    });
+};

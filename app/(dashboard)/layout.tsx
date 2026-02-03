@@ -14,7 +14,9 @@ import {
     Tags,
     Sliders,
     ChevronDown, 
-    ChevronRight 
+    ChevronRight,
+    MessageSquarePlus,
+    List
 } from 'lucide-react';
 import styles from './layout.module.css';
 
@@ -31,93 +33,91 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const [expandedMenu, setExpandedMenu] = useState<string | null>(null);
 
     const navigation: NavItem[] = [
-        { name: 'Overview', href: '/dashboard', icon: LayoutDashboard },
+        { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
         { 
             name: 'Products', 
             href: '/dashboard/products', 
             icon: Package,
             children: [
+                { name: 'Product List', href: '/dashboard/products', icon: List },
                 { name: 'Categories', href: '/dashboard/categories', icon: Tags },
                 { name: 'Attributes', href: '/dashboard/attributes', icon: Sliders },
             ]
         },
-        { name: 'Users', href: '/dashboard/users', icon: Users },
+        { 
+            name: 'Users', 
+            href: '/dashboard/users', 
+            icon: Users,
+            children: [
+                { name: 'Customer List', href: '/dashboard/users', icon: List },
+                { name: 'Form Fields', href: '/dashboard/form-fields', icon: MessageSquarePlus },
+            ]
+        },
         { name: 'Settings', href: '/dashboard/settings', icon: Settings },
     ];
 
     useEffect(() => {
-        const activeItem = navigation.find(item => {
-            if (!item.children) return false;
-            const isParentActive = pathname === item.href;
-            const isChildActive = item.children.some(child => pathname.startsWith(child.href));
-            return isParentActive || isChildActive;
-        });
-
-        if (activeItem) {
-            setExpandedMenu(activeItem.href);
-        } else {
-            setExpandedMenu(null);
+        const activeParent = navigation.find(item => 
+            item.children && pathname.startsWith(item.href)
+        );
+        if (activeParent) {
+            setExpandedMenu(activeParent.href);
         }
     }, [pathname]);
 
-    const toggleMenu = (href: string) => {
-        setExpandedMenu(prev => prev === href ? null : href);
+    const handleToggleMenu = (item: NavItem, e: React.MouseEvent) => {
+        if (item.children) {
+            e.preventDefault();
+            setExpandedMenu(prev => prev === item.href ? null : item.href);
+        }
     };
 
     return (
-        <div className={styles.container}>
+        <div className={styles.appContainer}>
             <aside className={styles.sidebar}>
-                <div className={styles.sidebarHeader}>
-                    <Command size={20} color="#ffffff" />
-                    <span className={styles.brandName}>Admin Portal</span>
+                <div className={styles.sidebarBrand}>
+                    <Command size={20} className={styles.brandIcon} />
+                    <span className={styles.brandText}>Admin Portal</span>
                 </div>
 
-                <nav className={styles.nav}>
+                <nav className={styles.sidebarNav}>
                     {navigation.map((item) => {
                         const Icon = item.icon;
                         const hasChildren = item.children && item.children.length > 0;
-                        const isExpanded = expandedMenu === item.href;
-                        
+                        const isOpen = expandedMenu === item.href;
                         const isActive = item.href === '/dashboard' 
                             ? pathname === '/dashboard' 
                             : pathname.startsWith(item.href);
 
                         return (
-                            <div key={item.name} className={styles.navItemContainer}>
-                                <div className={styles.navItemWrapper}>
-                                    <Link
-                                        href={item.href}
-                                        className={`${styles.navLink} ${isActive ? styles.activeLink : ''}`}
-                                        onClick={(e) => {
-                                            if (hasChildren) {
-                                                toggleMenu(item.href);
-                                            }
-                                        }}
-                                    >
-                                        <div className={styles.linkContent}>
-                                            <Icon size={18} />
-                                            <span>{item.name}</span>
+                            <div key={item.name} className={styles.navGroup}>
+                                <Link
+                                    href={item.href}
+                                    className={`${styles.navItem} ${isActive ? styles.navItemActive : ''}`}
+                                    onClick={(e) => handleToggleMenu(item, e)}
+                                >
+                                    <div className={styles.navItemContent}>
+                                        <Icon size={18} />
+                                        <span>{item.name}</span>
+                                    </div>
+                                    {hasChildren && (
+                                        <div className={styles.navItemChevron}>
+                                            {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                                         </div>
-                                        
-                                        {hasChildren && (
-                                            <span className={styles.chevron}>
-                                                {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                                            </span>
-                                        )}
-                                    </Link>
-                                </div>
+                                    )}
+                                </Link>
 
-                                {hasChildren && isExpanded && (
+                                {hasChildren && isOpen && (
                                     <div className={styles.subMenu}>
                                         {item.children!.map((child) => {
                                             const ChildIcon = child.icon;
-                                            const isChildActive = pathname.startsWith(child.href);
-
+                                            const isExactChildActive = pathname === child.href;
+                                            
                                             return (
                                                 <Link
                                                     key={child.name}
                                                     href={child.href}
-                                                    className={`${styles.navLink} ${styles.subNavLink} ${isChildActive ? styles.activeLink : ''}`}
+                                                    className={`${styles.subNavItem} ${isExactChildActive ? styles.subNavItemActive : ''}`}
                                                 >
                                                     <ChildIcon size={16} />
                                                     <span>{child.name}</span>
@@ -132,12 +132,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </nav>
 
                 <div className={styles.sidebarFooter}>
-                    <div className={styles.userProfile}>
-                        <p className={styles.userName}>{user?.name || 'Administrator'}</p>
-                        <p className={styles.userEmail}>{user?.email}</p>
+                    <div className={styles.profileSection}>
+                        <div className={styles.profileInfo}>
+                            <p className={styles.profileName}>{user?.name || 'Administrator'}</p>
+                            <p className={styles.profileEmail}>{user?.email}</p>
+                        </div>
                     </div>
                     
-                    <button onClick={logout} className={styles.logoutBtn}>
+                    <button onClick={logout} className={styles.signOutBtn}>
                         <LogOut size={16} />
                         <span>Sign Out</span>
                     </button>

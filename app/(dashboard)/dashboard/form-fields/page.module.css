@@ -1,0 +1,32 @@
+.container { padding: 32px; max-width: 1200px; margin: 0 auto; }
+.header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; }
+.title { font-size: 24px; font-weight: 700; color: #111; letter-spacing: -0.01em; }
+.subtitle { font-size: 14px; color: #71717a; margin-top: 4px; }
+.addButton { background: #18181b; color: #fff; padding: 10px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; text-decoration: none; transition: 0.2s; }
+.toolbar { margin-bottom: 24px; }
+.searchBox { position: relative; max-width: 400px; }
+.searchIcon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #a1a1aa; }
+.searchInput { width: 100%; padding: 10px 12px 10px 40px; border: 1px solid #e4e4e7; border-radius: 8px; font-size: 14px; outline: none; transition: 0.2s; background: #fff; }
+.tableWrapper { background: #fff; border: 1px solid #e4e4e7; border-radius: 12px; overflow: hidden; }
+.table { width: 100%; border-collapse: collapse; }
+.th { background: #fafafa; padding: 14px 20px; font-size: 11px; text-transform: uppercase; font-weight: 700; color: #71717a; text-align: left; border-bottom: 1px solid #e4e4e7; }
+.td { padding: 24px 20px; border-bottom: 1px solid #f4f4f5; vertical-align: top; }
+.fieldMain { display: flex; flex-direction: column; gap: 8px; }
+.fieldLabel { font-size: 15px; font-weight: 700; color: #18181b; }
+.topOneBadge { display: flex; align-items: center; gap: 6px; background: #fefce8; color: #854d0e; padding: 4px 10px; border-radius: 6px; font-size: 11px; border: 1px solid #fef08a; width: fit-content; }
+.statsContainer { display: flex; flex-direction: column; gap: 10px; max-width: 340px; background: #fafafa; padding: 12px; border-radius: 8px; margin-top: 8px; }
+.statRow { display: flex; flex-direction: column; gap: 4px; }
+.statInfo { display: flex; justify-content: space-between; font-size: 11px; }
+.optionText { font-weight: 600; color: #444; }
+.countText { color: #888; font-family: monospace; }
+.progressBar { width: 100%; height: 6px; background: #e4e4e7; border-radius: 10px; overflow: hidden; }
+.progressFill { height: 100%; background: #18181b; transition: width 0.4s ease; }
+.timeBox { display: flex; flex-direction: column; gap: 12px; padding: 12px; background: #fafafa; border-radius: 8px; border: 1px solid #f4f4f5; min-width: 150px; }
+.timeItem { display: flex; flex-direction: column; }
+.timeLabel { font-size: 9px; text-transform: uppercase; color: #a1a1aa; font-weight: 800; }
+.timeValue { font-size: 12px; font-weight: 600; color: #3f3f46; }
+.statusToggle { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 600; cursor: pointer; border: 1px solid transparent; transition: 0.2s; }
+.statusToggle.active { background: #18181b; color: #fff; }
+.statusToggle.inactive { background: #fff; color: #a1a1aa; border: 1px dashed #e4e4e7; }
+.deleteBtn { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid #e4e4e7; background: #fff; color: #ef4444; cursor: pointer; transition: 0.2s; float: right; }
+.loadingState, .emptyState { padding: 100px; text-align: center; color: #a1a1aa; }
