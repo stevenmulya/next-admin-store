@@ -20,7 +20,7 @@ interface FormField {
     stats?: {
         counts: { [key: string]: number };
         total: number;
-        topOne: string | null;
+        topAnswers: string[];
         firstResponse: string | null;
         lastResponse: string | null;
     };
@@ -87,7 +87,7 @@ export default function FormFieldsPage() {
             <div className={styles.header}>
                 <div className={styles.headerInfo}>
                     <h1 className={styles.title}>Survey Statistics</h1>
-                    <p className={styles.subtitle}>Track responses and identify the most popular choices.</p>
+                    <p className={styles.subtitle}>Real-time insights and winner tracking.</p>
                 </div>
                 <Link href="/dashboard/form-fields/add" className={styles.addButton}>
                     <Plus size={16} /> New Question
@@ -114,7 +114,7 @@ export default function FormFieldsPage() {
                     <table className={styles.table}>
                         <thead>
                             <tr>
-                                <th className={styles.th}>Question & Top Answer</th>
+                                <th className={styles.th}>Question & Top Answers</th>
                                 <th className={styles.th}>Activity Period</th>
                                 <th className={styles.th}>Status</th>
                                 <th className={styles.th} style={{ textAlign: 'right' }}>Actions</th>
@@ -127,10 +127,15 @@ export default function FormFieldsPage() {
                                         <div className={styles.fieldMain}>
                                             <span className={styles.fieldLabel}>{field.label}</span>
                                             
-                                            {field.stats?.topOne && (
-                                                <div className={styles.topOneBadge}>
-                                                    <Trophy size={12} />
-                                                    <span>Top Answer: <strong>{field.stats.topOne}</strong></span>
+                                            {field.stats && field.stats.topAnswers.length > 0 && (
+                                                <div className={styles.topAnswersWrapper}>
+                                                    <Trophy size={12} className={styles.trophyIcon} />
+                                                    <span className={styles.topLabel}>Top Answers:</span>
+                                                    <div className={styles.topBadges}>
+                                                        {field.stats.topAnswers.map((ans, idx) => (
+                                                            <span key={idx} className={styles.topBadge}>{ans}</span>
+                                                        ))}
+                                                    </div>
                                                 </div>
                                             )}
 

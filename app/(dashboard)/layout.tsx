@@ -16,7 +16,8 @@ import {
     ChevronDown, 
     ChevronRight,
     MessageSquarePlus,
-    List
+    List,
+    ShoppingCart // Import Icon baru untuk Orders
 } from 'lucide-react';
 import styles from './layout.module.css';
 
@@ -34,6 +35,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     const navigation: NavItem[] = [
         { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+        
+        // --- MENU BARU: ORDERS ---
+        { 
+            name: 'Orders', 
+            href: '/dashboard/orders', 
+            icon: ShoppingCart,
+            children: [
+                { name: 'Order List', href: '/dashboard/orders', icon: List },
+                // Nanti bisa ditambah: { name: 'Transactions', href: '/dashboard/transactions', icon: Receipt },
+            ]
+        },
+        // -------------------------
+
         { 
             name: 'Products', 
             href: '/dashboard/products', 
@@ -57,6 +71,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     ];
 
     useEffect(() => {
+        // Logika untuk otomatis membuka menu jika kita berada di halaman anak
         const activeParent = navigation.find(item => 
             item.children && pathname.startsWith(item.href)
         );
@@ -85,6 +100,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         const Icon = item.icon;
                         const hasChildren = item.children && item.children.length > 0;
                         const isOpen = expandedMenu === item.href;
+                        
+                        // Cek active state
                         const isActive = item.href === '/dashboard' 
                             ? pathname === '/dashboard' 
                             : pathname.startsWith(item.href);
