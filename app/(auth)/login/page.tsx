@@ -100,7 +100,7 @@ export default function LoginPage() {
                         disabled={isLoading}
                     >
                         {isLoading ? (
-                            <div className="flex items-center justify-center gap-2">
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                                 <Loader2 size={18} className="animate-spin" />
                                 <span>Authenticating...</span>
                             </div>

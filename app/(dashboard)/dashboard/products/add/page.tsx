@@ -36,7 +36,7 @@ export default function AddProductPage() {
         price: '',
         brand: '',
         category_id: null as number | null,
-        countInStock: '', // Di state namanya 'countInStock'
+        countInStock: '',
         description: '',
         similarities: '',
         weight: '',
@@ -85,7 +85,11 @@ export default function AddProductPage() {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         if (name === 'name') {
-            setFormData((prev) => ({ ...prev, name: value, slug: generateSlug(value) }));
+            setFormData((prev) => ({ 
+                ...prev, 
+                name: value, 
+                slug: prev.slug === generateSlug(prev.name) || prev.slug === '' ? generateSlug(value) : prev.slug 
+            }));
         } else {
             setFormData((prev) => ({ ...prev, [name]: value }));
         }
@@ -102,18 +106,15 @@ export default function AddProductPage() {
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
             const selectedFiles = Array.from(e.target.files);
-            
             const invalidFiles = selectedFiles.filter(file => file.size > 5 * 1024 * 1024);
             if (invalidFiles.length > 0) {
                 notifyError("One or more images exceed the 5MB limit");
                 return;
             }
-
             if (imageFiles.length + selectedFiles.length > 5) {
                 notifyError("You can only upload up to 5 images");
                 return;
             }
-
             setImageFiles(prev => [...prev, ...selectedFiles].slice(0, 5));
         }
     };
@@ -127,65 +128,42 @@ export default function AddProductPage() {
         if (!formData.category_id) return "Please select a category";
         if (imageFiles.length === 0) return "Please upload at least one image";
         if (!formData.brand.trim()) return "Brand is required";
-
         if (productType === 'simple') {
             if (!formData.price || Number(formData.price) <= 0) return "Price must be greater than $0";
             if (formData.countInStock === '' || Number(formData.countInStock) < 0) return "Stock cannot be negative";
         }
-
         if (productType === 'variable') {
-            if (variants.length === 0) return "Please generate at least one variant for variable products";
+            if (variants.length === 0) return "Please generate at least one variant";
             const invalidVariant = variants.find(v => Number(v.price) <= 0 || Number(v.stock) < 0);
             if (invalidVariant) return `Variant ${invalidVariant.sku} has invalid price or stock`;
         }
-
         if (Number(formData.weight) < 0) return "Weight cannot be negative";
-        if (Number(formData.length) < 0 || Number(formData.width) < 0 || Number(formData.height) < 0) {
-            return "Dimensions cannot be negative";
-        }
-
         return null;
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        
         const error = validateForm();
         if (error) {
             notifyError(error);
             return;
         }
-
         setIsLoading(true);
         const data = new FormData();
-        
-        // --- PERBAIKAN DI SINI (MAPPING KEYS) ---
         Object.entries(formData).forEach(([key, value]) => {
             if (value !== null && value !== '') {
-                // Jika key adalah 'countInStock', ubah jadi 'stock' agar backend mengerti
-                if (key === 'countInStock') {
-                    data.append('stock', String(value));
-                } else {
-                    data.append(key, String(value));
-                }
+                const apiKey = key === 'countInStock' ? 'stock' : key;
+                data.append(apiKey, String(value));
             }
         });
-        
         data.append('product_type', productType);
         data.append('attributes', JSON.stringify(attrValues));
-
         if (videos.length > 0) {
             const validVideos = videos.filter(v => v.video_url.trim() !== '');
             if (validVideos.length > 0) data.append('videos', JSON.stringify(validVideos));
         }
-
-        if (productType === 'variable') {
-            data.append('variants', JSON.stringify(variants));
-        }
-
-        imageFiles.forEach((file) => {
-            data.append('images', file);
-        });
+        if (productType === 'variable') data.append('variants', JSON.stringify(variants));
+        imageFiles.forEach((file) => data.append('images', file));
 
         try {
             await api.post('/products', data, {
@@ -195,11 +173,7 @@ export default function AddProductPage() {
             router.push('/dashboard/products');
         } catch (error: any) {
             const message = error.response?.data?.message || 'Failed to save product';
-            if (message.includes(',')) {
-                message.split(',').forEach((err: string) => notifyError(err.trim()));
-            } else {
-                notifyError(message);
-            }
+            message.split(',').forEach((err: string) => notifyError(err.trim()));
         } finally {
             setIsLoading(false);
         }
@@ -216,7 +190,6 @@ export default function AddProductPage() {
                     <ArrowLeft size={16} /> Back
                 </Link>
             </div>
-
             <div className={styles.mainGrid}>
                 <div className={styles.leftColumn}>
                     <div className={styles.card}>
@@ -230,16 +203,13 @@ export default function AddProductPage() {
                             <textarea name="description" className={styles.textarea} value={formData.description} onChange={handleChange} placeholder="Enter product description" />
                         </div>
                     </div>
-
                     <div className={styles.card}>
                         <h3 className={styles.cardTitle}>Media (Images) <span style={{color: 'red'}}>*</span></h3>
                         <div className={styles.imageGrid}>
                             {previewUrls.map((url, index) => (
                                 <div key={index} className={styles.imageBox}>
                                     <img src={url} alt="Preview" className={styles.previewImg} />
-                                    <button type="button" onClick={() => removeImage(index)} className={styles.removeBtn}>
-                                        <X size={12} />
-                                    </button>
+                                    <button type="button" onClick={() => removeImage(index)} className={styles.removeBtn}><X size={12} /></button>
                                     {index === 0 && <span className={styles.mainBadge}>Main</span>}
                                 </div>
                             ))}
@@ -253,40 +223,21 @@ export default function AddProductPage() {
                             )}
                         </div>
                     </div>
-
                     <div className={styles.card}>
                         <h3 className={styles.cardTitle}>Product Videos</h3>
                         <VideoManager videos={videos} onChange={setVideos} />
                     </div>
-
                     {productType === 'simple' ? (
                         <div className={styles.card}>
                             <h3 className={styles.cardTitle}>Pricing & Inventory</h3>
                             <div className={styles.row}>
                                 <div className={styles.formGroup}>
                                     <label className={styles.label}>Price ($) <span style={{color: 'red'}}>*</span></label>
-                                    <input 
-                                        name="price" 
-                                        type="number" 
-                                        step="0.01" 
-                                        className={styles.input} 
-                                        value={formData.price} 
-                                        onChange={handleChange} 
-                                        onWheel={(e) => e.currentTarget.blur()}
-                                        placeholder="e.g. 29.99" 
-                                    />
+                                    <input name="price" type="number" step="0.01" className={styles.input} value={formData.price} onChange={handleChange} onWheel={(e) => e.currentTarget.blur()} placeholder="e.g. 29.99" />
                                 </div>
                                 <div className={styles.formGroup}>
                                     <label className={styles.label}>Stock <span style={{color: 'red'}}>*</span></label>
-                                    <input 
-                                        name="countInStock" 
-                                        type="number" 
-                                        className={styles.input} 
-                                        value={formData.countInStock} 
-                                        onChange={handleChange} 
-                                        onWheel={(e) => e.currentTarget.blur()}
-                                        placeholder="e.g. 50" 
-                                    />
+                                    <input name="countInStock" type="number" className={styles.input} value={formData.countInStock} onChange={handleChange} onWheel={(e) => e.currentTarget.blur()} placeholder="e.g. 50" />
                                 </div>
                             </div>
                             <div className={styles.row}>
@@ -302,34 +253,23 @@ export default function AddProductPage() {
                         </div>
                     ) : (
                         <div className={styles.card}>
-                            <h3 className={styles.cardTitle}>
-                                <Layers size={18} style={{ verticalAlign: 'middle', marginRight: '8px' }}/>
-                                Variants Generator
-                            </h3>
-                            <p className={styles.helperText} style={{ marginBottom: '16px' }}>
-                                Create variants like Size/Color. Inventory and Price ($) are managed per variant.
-                            </p>
+                            <h3 className={styles.cardTitle}><Layers size={18} style={{ verticalAlign: 'middle', marginRight: '8px' }}/>Variants Generator</h3>
                             <VariantManager variants={variants} onChange={setVariants} />
-                            
                             <div className={styles.formGroup} style={{ marginTop: '20px' }}>
                                 <label className={styles.label}>Brand <span style={{color: 'red'}}>*</span></label>
                                 <input name="brand" className={styles.input} value={formData.brand} onChange={handleChange} placeholder="Enter brand" />
                             </div>
                         </div>
                     )}
-
                     <div className={styles.card}>
-                        <h3 className={styles.cardTitle}>
-                            <Box size={18} style={{ verticalAlign: 'middle', marginRight: '8px' }}/>
-                            Shipping & Delivery
-                        </h3>
+                        <h3 className={styles.cardTitle}><Box size={18} style={{ verticalAlign: 'middle', marginRight: '8px' }}/>Shipping & Delivery</h3>
                         <div className={styles.row}>
                             <div className={styles.formGroup}>
                                 <label className={styles.label}>Weight (Gram)</label>
                                 <input name="weight" type="number" onWheel={(e) => e.currentTarget.blur()} className={styles.input} value={formData.weight} onChange={handleChange} placeholder="e.g. 500" />
                             </div>
                             <div className={styles.formGroup}>
-                                <label className={styles.label}>Dimensions (L x W x H) cm</label>
+                                <label className={styles.label}>Dimensions (cm)</label>
                                 <div style={{ display: 'flex', gap: '10px' }}>
                                     <input name="length" type="number" onWheel={(e) => e.currentTarget.blur()} placeholder="L" className={styles.input} value={formData.length} onChange={handleChange} />
                                     <input name="width" type="number" onWheel={(e) => e.currentTarget.blur()} placeholder="W" className={styles.input} value={formData.width} onChange={handleChange} />
@@ -338,7 +278,6 @@ export default function AddProductPage() {
                             </div>
                         </div>
                     </div>
-
                     {formData.category_id && attrTemplates.length > 0 && (
                         <div className={styles.card}>
                             <h3 className={styles.cardTitle}>Specifications</h3>
@@ -346,99 +285,45 @@ export default function AddProductPage() {
                         </div>
                     )}
                 </div>
-
                 <div className={styles.rightColumn}>
                     <div className={styles.card}>
                         <h3 className={styles.cardTitle}>Status & Visibility</h3>
-
                         <div className={styles.formGroup} style={{ marginBottom: '20px', paddingBottom: '20px', borderBottom: '1px solid #f5f5f5' }}>
                             <label className={styles.label} style={{ marginBottom: '12px' }}>Product Type</label>
-                            
                             <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', marginBottom: '10px' }}>
-                                <input 
-                                    type="radio" 
-                                    name="ptype" 
-                                    checked={productType === 'simple'} 
-                                    onChange={() => setProductType('simple')}
-                                    style={{ accentColor: '#171717', width: '16px', height: '16px' }}
-                                />
-                                <div>
-                                    <span style={{ fontSize: '14px', fontWeight: 500, display: 'block' }}>Simple Product</span>
-                                    <span style={{ fontSize: '11px', color: '#666' }}>Standard item with one SKU</span>
-                                </div>
+                                <input type="radio" name="ptype" checked={productType === 'simple'} onChange={() => setProductType('simple')} style={{ accentColor: '#171717', width: '16px', height: '16px' }} />
+                                <div><span style={{ fontSize: '14px', fontWeight: 500, display: 'block' }}>Simple Product</span></div>
                             </label>
-
                             <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
-                                <input 
-                                    type="radio" 
-                                    name="ptype" 
-                                    checked={productType === 'variable'} 
-                                    onChange={() => setProductType('variable')}
-                                    style={{ accentColor: '#171717', width: '16px', height: '16px' }}
-                                />
-                                <div>
-                                    <span style={{ fontSize: '14px', fontWeight: 500, display: 'block' }}>Product with Variants</span>
-                                    <span style={{ fontSize: '11px', color: '#666' }}>Has colors, sizes, etc.</span>
-                                </div>
-                            </label>
-                        </div>
-                        
-                        <div className={styles.switchGroup}>
-                            <div className={styles.switchLabel}>
-                                <span>Publish</span>
-                                <small>Make product visible</small>
-                            </div>
-                            <label className={styles.switch}>
-                                <input type="checkbox" checked={formData.is_published} onChange={() => handleToggle('is_published')} />
-                                <span className={styles.slider}></span>
+                                <input type="radio" name="ptype" checked={productType === 'variable'} onChange={() => setProductType('variable')} style={{ accentColor: '#171717', width: '16px', height: '16px' }} />
+                                <div><span style={{ fontSize: '14px', fontWeight: 500, display: 'block' }}>Variable Product</span></div>
                             </label>
                         </div>
                         <div className={styles.switchGroup}>
-                            <div className={styles.switchLabel}>
-                                <span>Pin Product</span>
-                                <small>Stick to top of lists</small>
-                            </div>
-                            <label className={styles.switch}>
-                                <input type="checkbox" checked={formData.is_pinned} onChange={() => handleToggle('is_pinned')} />
-                                <span className={styles.slider}></span>
-                            </label>
+                            <div className={styles.switchLabel}><span>Publish</span><small>Make product visible</small></div>
+                            <label className={styles.switch}><input type="checkbox" checked={formData.is_published} onChange={() => handleToggle('is_published')} /><span className={styles.slider}></span></label>
                         </div>
                         <div className={styles.switchGroup}>
-                            <div className={styles.switchLabel}>
-                                <span>Best Seller</span>
-                                <small>Show in homepage showcase</small>
-                            </div>
-                            <label className={styles.switch}>
-                                <input type="checkbox" checked={formData.is_best_seller} onChange={() => handleToggle('is_best_seller')} />
-                                <span className={styles.slider}></span>
-                            </label>
+                            <div className={styles.switchLabel}><span>Pin Product</span><small>Stick to top of lists</small></div>
+                            <label className={styles.switch}><input type="checkbox" checked={formData.is_pinned} onChange={() => handleToggle('is_pinned')} /><span className={styles.slider}></span></label>
+                        </div>
+                        <div className={styles.switchGroup}>
+                            <div className={styles.switchLabel}><span>Best Seller</span><small>Show in showcase</small></div>
+                            <label className={styles.switch}><input type="checkbox" checked={formData.is_best_seller} onChange={() => handleToggle('is_best_seller')} /><span className={styles.slider}></span></label>
                         </div>
                     </div>
-
                     <div className={styles.card}>
                         <h3 className={styles.cardTitle}>Organization <span style={{color: 'red'}}>*</span></h3>
                         <div className={styles.formGroup}>
                             <label className={styles.label}>Category</label>
-                            {categoriesLoading ? (
-                                <div className={styles.loadingText}>Loading...</div>
-                            ) : (
-                                <CategorySelector tree={tree} onSelect={(id) => setFormData(prev => ({ ...prev, category_id: id }))} />
-                            )}
+                            {categoriesLoading ? <div className={styles.loadingText}>Loading...</div> : <CategorySelector tree={tree} onSelect={(id) => setFormData(prev => ({ ...prev, category_id: id }))} />}
                         </div>
                     </div>
-
                     <div className={styles.card}>
                         <h3 className={styles.cardTitle}>SEO & Search</h3>
-                         <div className={styles.formGroup}>
-                            <label className={styles.label}>Slug (URL)</label>
-                            <input name="slug" className={styles.input} value={formData.slug} onChange={handleChange} placeholder="Auto-generated slug" />
-                        </div>
-                         <div className={styles.formGroup}>
-                            <label className={styles.label}>Search Keywords</label>
-                            <textarea name="similarities" className={styles.textareaSmall} value={formData.similarities} onChange={handleChange} placeholder="Enter keywords" />
-                        </div>
+                        <div className={styles.formGroup}><label className={styles.label}>Slug (URL)</label><input name="slug" className={styles.input} value={formData.slug} onChange={handleChange} placeholder="Auto-generated slug" /></div>
+                        <div className={styles.formGroup}><label className={styles.label}>Keywords</label><textarea name="similarities" className={styles.textareaSmall} value={formData.similarities} onChange={handleChange} placeholder="Enter keywords" /></div>
                     </div>
-
                     <button type="submit" className={styles.submitBtn} disabled={isLoading} onClick={handleSubmit}>
                         {isLoading ? <Loader2 size={18} className="animate-spin" /> : 'Save Product'}
                     </button>
