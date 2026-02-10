@@ -9,9 +9,8 @@ import { notifyError } from '@/utils/toastHelper';
 import toast from 'react-hot-toast';
 import { 
     Plus, Pencil, Trash2, Loader2, PackageOpen, 
-    ImageIcon, Search, ArrowUpDown, AlertTriangle,
-    History, User, X, Clock,
-    Pin, Star, ChevronLeft, ChevronRight
+    ImageIcon, Search, ArrowUpDown,
+    History, User, Pin, Star, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { useCategoryTree } from '@/hooks/useCategories';
 
@@ -54,15 +53,6 @@ interface Product {
     updatedAt: string;
 }
 
-interface HistoryLog {
-    id: number;
-    action: string;
-    performed_by: string;
-    timestamp: string;
-    changes: any;
-    product_name: string;
-}
-
 export default function ProductsPage() {
     const router = useRouter();
     const { tree } = useCategoryTree();
@@ -78,15 +68,9 @@ export default function ProductsPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [debouncedSearch, setDebouncedSearch] = useState("");
     const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
-    const [showLowStock, setShowLowStock] = useState(false);
     
     const [selectedParent, setSelectedParent] = useState<string>("all");
     const [selectedSub, setSelectedSub] = useState<string>("all");
-
-    const [historyData, setHistoryData] = useState<HistoryLog[]>([]);
-    const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-    const [selectedProductName, setSelectedProductName] = useState("");
-    const [isHistoryLoading, setIsHistoryLoading] = useState(false);
 
     useEffect(() => {
         const handler = setTimeout(() => {
@@ -108,8 +92,7 @@ export default function ProductsPage() {
                 limit,
                 search: debouncedSearch,
                 sort: sortOrder,
-                category_id: categoryIdParam || undefined,
-                low_stock: showLowStock ? 'true' : undefined
+                category_id: categoryIdParam || undefined
             };
 
             const response = await api.get('/products', { params });
@@ -127,25 +110,11 @@ export default function ProductsPage() {
         } finally {
             setIsLoading(false);
         }
-    }, [page, limit, debouncedSearch, sortOrder, selectedParent, selectedSub, showLowStock]);
+    }, [page, limit, debouncedSearch, sortOrder, selectedParent, selectedSub]);
 
     useEffect(() => {
         fetchProducts();
     }, [fetchProducts]);
-
-    const fetchHistory = async (id: number, name: string) => {
-        setIsHistoryLoading(true);
-        setSelectedProductName(name);
-        setIsHistoryOpen(true);
-        try {
-            const response = await api.get(`/products/${id}/history`);
-            setHistoryData(response.data.data || []);
-        } catch (error) {
-            setHistoryData([]);
-        } finally {
-            setIsHistoryLoading(false);
-        }
-    };
 
     const handleDelete = async (id: number) => {
         if (!confirm('Are you sure you want to delete this product?')) return;
@@ -174,11 +143,6 @@ export default function ProductsPage() {
         setPage(1);
     };
 
-    const handleLowStockChange = () => {
-        setShowLowStock(prev => !prev);
-        setPage(1);
-    };
-
     const getTotalStock = (p: Product) => {
         if (p.product_type === 'variable' && Array.isArray(p.variants)) {
             return p.variants.reduce((sum, v) => sum + (Number(v.stock) || 0), 0);
@@ -203,9 +167,9 @@ export default function ProductsPage() {
 
     const formatDate = (dateString: string) => {
         if (!dateString) return '-';
-        return new Date(dateString).toLocaleDateString('en-US', {
+        return new Date(dateString).toLocaleDateString('en-GB', {
             day: '2-digit', month: 'short', year: 'numeric',
-            hour: '2-digit', minute: '2-digit'
+            hour: '2-digit', minute: '2-digit', hour12: false
         });
     };
 
@@ -236,24 +200,25 @@ export default function ProductsPage() {
                 </div>
                 
                 <div className={styles.filterContainer}>
-                    <div className={styles.categoryButtonGroup}>
-                        <button className={`${styles.catBtn} ${selectedParent === "all" ? styles.activeCat : ""}`} onClick={() => handleParentClick("all")}>All Categories</button>
-                        {tree.map(cat => (
-                            <button key={cat.id} className={`${styles.catBtn} ${selectedParent === String(cat.id) ? styles.activeCat : ""}`} onClick={() => handleParentClick(String(cat.id))}>{cat.name}</button>
-                        ))}
-                    </div>
-
-                    {selectedParent !== "all" && tree.find(c => String(c.id) === selectedParent)?.children?.length! > 0 && (
-                        <div className={styles.subCategoryGroup}>
-                            <button className={`${styles.subBtn} ${selectedSub === "all" ? styles.activeSub : ""}`} onClick={() => handleSubClick("all")}>All Sub</button>
-                            {tree.find(c => String(c.id) === selectedParent)?.children?.map(child => (
-                                <button key={child.id} className={`${styles.subBtn} ${selectedSub === String(child.id) ? styles.activeSub : ""}`} onClick={() => handleSubClick(String(child.id))}>{child.name}</button>
+                    <div className={styles.categoryFilters}>
+                        <div className={styles.categoryButtonGroup}>
+                            <button className={`${styles.catBtn} ${selectedParent === "all" ? styles.activeCat : ""}`} onClick={() => handleParentClick("all")}>All Categories</button>
+                            {tree.map(cat => (
+                                <button key={cat.id} className={`${styles.catBtn} ${selectedParent === String(cat.id) ? styles.activeCat : ""}`} onClick={() => handleParentClick(String(cat.id))}>{cat.name}</button>
                             ))}
                         </div>
-                    )}
+
+                        {selectedParent !== "all" && tree.find(c => String(c.id) === selectedParent)?.children?.length! > 0 && (
+                            <div className={styles.subCategoryGroup}>
+                                <button className={`${styles.subBtn} ${selectedSub === "all" ? styles.activeSub : ""}`} onClick={() => handleSubClick("all")}>All Sub</button>
+                                {tree.find(c => String(c.id) === selectedParent)?.children?.map(child => (
+                                    <button key={child.id} className={`${styles.subBtn} ${selectedSub === String(child.id) ? styles.activeSub : ""}`} onClick={() => handleSubClick(String(child.id))}>{child.name}</button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
 
                     <div className={styles.actionFilters}>
-                        <button className={`${styles.filterBtn} ${showLowStock ? styles.filterBtnActive : ''}`} onClick={handleLowStockChange}><AlertTriangle size={14} /> Low Stock (&lt; 5)</button>
                         <button className={styles.sortButton} onClick={handleSortChange}><ArrowUpDown size={14} /> <span className={styles.sortLabel}>Sort:</span> <span className={styles.sortValue}>{sortOrder === 'newest' ? 'Newest' : 'Oldest'}</span></button>
                     </div>
                 </div>
@@ -288,14 +253,14 @@ export default function ProductsPage() {
                                                 <td className={styles.td}>
                                                     <div className={styles.productCell}>
                                                         <div className={styles.imageWrapper}>
-                                                            {getImageUrl(product) ? <img src={getImageUrl(product)!} className={styles.productImg} alt={product.name} /> : <ImageIcon size={18} color="#d4d4d4" />}
+                                                            {getImageUrl(product) ? <img src={getImageUrl(product)!} className={styles.productImg} alt={product.name} /> : <ImageIcon size={18} className={styles.placeholderIcon} />}
                                                         </div>
                                                         <div className={styles.productInfo}>
                                                             <div className={styles.statusRow}>
                                                                 {product.is_pinned && <span className={styles.badgePinned}><Pin size={10} fill="currentColor" /> Pinned</span>}
                                                                 {product.is_best_seller && <span className={styles.badgeBestSeller}><Star size={10} fill="currentColor" /> Best Seller</span>}
                                                                 {!product.is_published && <span className={styles.badgeDraft}>Draft</span>}
-                                                                {product.product_type === 'variable' && <span style={{ fontSize: '9px', background: '#e0e7ff', color: '#3730a3', padding: '2px 6px', borderRadius: '4px', fontWeight: 700, textTransform: 'uppercase' }}>Variable</span>}
+                                                                {product.product_type === 'variable' && <span className={styles.badgeVariable}>Variable</span>}
                                                             </div>
                                                             <div className={styles.nameRow}><span className={styles.productName}>{product.name}</span></div>
                                                             <div className={styles.metaRow}><span className={styles.brandName}>{product.brand || 'No Brand'}</span>{product.sku && <span className={styles.sku}>{product.sku}</span>}</div>
@@ -306,7 +271,7 @@ export default function ProductsPage() {
                                                     <div className={styles.categoryPath}>{product.category?.parent && <span className={styles.parentText}>{product.category.parent.name}</span>}<span className={styles.categoryLabel}>{product.category?.name || 'Uncategorized'}</span></div>
                                                 </td>
                                                 <td className={styles.td}>
-                                                    <div className={styles.priceText}>{product.product_type === 'variable' && <span style={{fontSize: '11px', fontWeight: 400, color: '#666', marginRight: '4px'}}>from</span>}${displayPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+                                                    <div className={styles.priceText}>{product.product_type === 'variable' && <span className={styles.priceFrom}>from</span>}${displayPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
                                                     <div className={totalStock < 5 ? styles.lowStockAlert : styles.inStock}>{totalStock} Units</div>
                                                 </td>
                                                 <td className={styles.td}>
@@ -318,7 +283,7 @@ export default function ProductsPage() {
                                                 </td>
                                                 <td className={styles.td}>
                                                     <div className={styles.actions}>
-                                                        <button className={styles.actionBtn} onClick={() => fetchHistory(product.id, product.name)}><History size={14} /></button>
+                                                        <button className={styles.actionBtn} onClick={() => router.push(`/dashboard/products/history/${product.id}`)}><History size={14} /></button>
                                                         <button className={styles.actionBtn} onClick={() => router.push(`/dashboard/products/edit/${product.id}`)}><Pencil size={14} /></button>
                                                         <button className={`${styles.actionBtn} ${styles.deleteBtn}`} onClick={() => handleDelete(product.id)}><Trash2 size={14} /></button>
                                                     </div>
@@ -330,54 +295,14 @@ export default function ProductsPage() {
                             </table>
                         </div>
 
-                        <div className={styles.paginationContainer} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px', gap: '16px', borderTop: '1px solid #eee' }}>
-                            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className={styles.pageBtn} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '8px 12px', borderRadius: '8px', border: '1px solid #eee', background: page === 1 ? '#f5f5f5' : 'white', cursor: page === 1 ? 'not-allowed' : 'pointer' }}><ChevronLeft size={16} /> Prev</button>
-                            <span style={{ fontSize: '14px', color: '#555', fontWeight: 500 }}>Page {page} of {totalPages}</span>
-                            <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages || totalPages === 0} className={styles.pageBtn} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '8px 12px', borderRadius: '8px', border: '1px solid #eee', background: (page === totalPages || totalPages === 0) ? '#f5f5f5' : 'white', cursor: (page === totalPages || totalPages === 0) ? 'not-allowed' : 'pointer' }}>Next <ChevronRight size={16} /></button>
+                        <div className={styles.paginationContainer}>
+                            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className={styles.pageBtn}><ChevronLeft size={16} /> Prev</button>
+                            <span className={styles.pageInfo}>Page {page} of {totalPages}</span>
+                            <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages || totalPages === 0} className={styles.pageBtn}>Next <ChevronRight size={16} /></button>
                         </div>
                     </>
                 )}
             </div>
-
-            {isHistoryOpen && (
-                <div className={styles.modalOverlay}>
-                    <div className={styles.historyDrawer}>
-                        <div className={styles.drawerHeader}>
-                            <div><h2 className={styles.drawerTitle}>Product History</h2><p className={styles.drawerSubtitle}>{selectedProductName}</p></div>
-                            <button onClick={() => setIsHistoryOpen(false)} className={styles.closeBtn}><X size={20} /></button>
-                        </div>
-                        <div className={styles.drawerContent}>
-                            {isHistoryLoading ? (
-                                <div className={styles.centerLoading}><Loader2 className="animate-spin" /></div>
-                            ) : historyData.length === 0 ? (
-                                <div className={styles.emptyHistory}><Clock size={32} strokeWidth={1} /><p>No activity logs found.</p></div>
-                            ) : (
-                                <div className={styles.timeline}>
-                                    {historyData.map((log) => {
-                                        let changes: any = log.changes;
-                                        if (typeof log.changes === 'string') { try { changes = JSON.parse(log.changes); } catch { changes = {}; } }
-                                        return (
-                                            <div key={log.id} className={styles.timelineItem}>
-                                                <div className={styles.timelinePoint}></div>
-                                                <div className={styles.timelineCard}>
-                                                    <div className={styles.timelineHeader}><span className={styles.actionBadge}>{log.action}</span><span className={styles.logTime}>{new Date(log.timestamp).toLocaleString()}</span></div>
-                                                    <p className={styles.logUser}>By: <strong>{log.performed_by}</strong></p>
-                                                    <div className={styles.changesList}>
-                                                        {changes?.updated_fields?.length > 0 && (
-                                                            <div className={styles.tagWrapper}><span className={styles.fieldName}>Fields:</span>{changes.updated_fields.map((f: string, i: number) => (<span key={i} className={styles.fieldTag}>{f}</span>))}</div>
-                                                        )}
-                                                        {changes?.note && <p className={styles.logDetails}>"{changes.note}"</p>}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 }
