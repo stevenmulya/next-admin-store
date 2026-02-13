@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { useTheme } from 'next-themes';
 import { Sun, Moon, ChevronLeft, ChevronRight } from 'lucide-react';
 import styles from './layout.module.css';
 
@@ -16,10 +17,11 @@ type NavItem = {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const { logout, user } = useAuth();
+    const { theme, setTheme, resolvedTheme } = useTheme();
     
+    const [mounted, setMounted] = useState(false);
     const [expandedMenu, setExpandedMenu] = useState<string | null>(null);
     const [isMobileOpen, setIsMobileOpen] = useState(false);
-    const [theme, setTheme] = useState<'light' | 'dark'>('light');
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [currentTime, setCurrentTime] = useState<string>('');
 
@@ -31,6 +33,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             children: [
                 { name: 'All Orders', href: '/dashboard/orders' },
                 { name: 'Pending', href: '/dashboard/orders/pending' },
+            ]
+        },
+        { 
+            name: 'Items (New)', 
+            href: '/dashboard/items', 
+            children: [
+                { name: 'Inventory', href: '/dashboard/items' },
+                { name: 'Categories', href: '/dashboard/categories' },
+                { name: 'Item Types', href: '/dashboard/item-types' },
             ]
         },
         { 
@@ -52,6 +63,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         },
         { name: 'Settings', href: '/dashboard/settings' },
     ];
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     useEffect(() => {
         const activeParent = navigation.find(item => 
@@ -86,7 +101,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     };
 
     const toggleTheme = () => {
-        setTheme(prev => prev === 'light' ? 'dark' : 'light');
+        setTheme(theme === 'light' ? 'dark' : 'light');
     };
 
     const getActiveParentName = () => {
@@ -110,8 +125,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     const activePageName = getActiveParentName();
 
+    if (!mounted) return null;
+
     return (
-        <div className={styles.container} data-theme={theme}>
+        <div className={styles.container} data-theme={theme === 'system' ? resolvedTheme : theme}>
             <header className={styles.mobileHeader}>
                 <span className={styles.mobileBrand}>ADMIN PORTAL</span>
                 <button 
@@ -209,8 +226,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             <div className={styles.userTime}>{currentTime}</div>
                         </div>
                         <div className={styles.actionButtons}>
-                            <button onClick={toggleTheme} className={styles.themeBtn}>
-                                {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
+                            <button onClick={toggleTheme} className={styles.themeBtn} type="button">
+                                {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
                             </button>
                             <button onClick={logout} className={styles.logoutBtn}>
                                 Log Out

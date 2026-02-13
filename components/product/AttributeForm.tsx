@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import styles from '../app/(dashboard)/dashboard/products/add/page.module.css';
+import styles from './AttributeForm.module.css';
 
 interface Template {
     id: number;
@@ -27,7 +27,7 @@ export default function AttributeForm({ templates, values, onChange }: Props) {
                         <input
                             type={t.type === 'color' ? 'color' : t.type}
                             className={t.type === 'color' ? styles.colorInput : styles.input}
-                            value={values[t.id] || ''}
+                            value={values[t.id] || (t.type === 'color' ? '#000000' : '')}
                             onChange={(e) => onChange(t.id, e.target.value)}
                             placeholder={`Enter ${t.name.toLowerCase()}...`}
                         />

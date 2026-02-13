@@ -21,10 +21,9 @@ interface SearchableSelectProps {
     value: number | null;
     onChange: (id: number) => void;
     placeholder: string;
-    level: number;
 }
 
-const SearchableSelect = ({ options, value, onChange, placeholder, level }: SearchableSelectProps) => {
+const SearchableSelect = ({ options, value, onChange, placeholder }: SearchableSelectProps) => {
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const containerRef = useRef<HTMLDivElement>(null);
@@ -46,7 +45,7 @@ const SearchableSelect = ({ options, value, onChange, placeholder, level }: Sear
     );
 
     return (
-        <div className={styles.selectContainer} ref={containerRef} style={{ marginLeft: level * 0 }}>
+        <div className={styles.selectContainer} ref={containerRef}>
             <div 
                 className={`${styles.selectTrigger} ${isOpen ? styles.triggerActive : ''}`}
                 onClick={() => setIsOpen(!isOpen)}
@@ -140,12 +139,11 @@ export default function CategorySelector({ tree, onSelect, selectedId }: Props) 
 
     const renderSelectors = () => {
         const selectors = [];
-        
         let currentOptions = tree;
+        
         selectors.push(
             <SearchableSelect
                 key="root"
-                level={0}
                 options={currentOptions}
                 value={selectedPath[0]?.id || null}
                 onChange={(id) => handleSelect(0, id)}
@@ -158,11 +156,10 @@ export default function CategorySelector({ tree, onSelect, selectedId }: Props) 
                 selectors.push(
                     <SearchableSelect
                         key={`level-${index + 1}`}
-                        level={index + 1}
                         options={category.children}
                         value={selectedPath[index + 1]?.id || null}
                         onChange={(id) => handleSelect(index + 1, id)}
-                        placeholder={`Select Sub Category of ${category.name}`}
+                        placeholder={`Select Sub Category`}
                     />
                 );
             }
@@ -176,7 +173,7 @@ export default function CategorySelector({ tree, onSelect, selectedId }: Props) 
             {renderSelectors()}
             {selectedPath.length > 0 && (
                 <div className={styles.summary}>
-                    Selected: <strong>{selectedPath[selectedPath.length - 1].name}</strong>
+                    <span>Selected: <strong>{selectedPath[selectedPath.length - 1].name}</strong></span>
                     <button 
                         type="button" 
                         onClick={() => { setSelectedPath([]); onSelect(0); }} 

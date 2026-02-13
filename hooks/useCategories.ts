@@ -13,7 +13,7 @@ export const useCategoryTree = () => {
 
     const fetchTree = async () => {
         try {
-            const { data } = await api.get('/categories');
+            const { data } = await api.get('/v1/categories');
             setTree(data.data || []);
         } catch (error) {
             console.error(error);

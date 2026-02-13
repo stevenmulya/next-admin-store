@@ -8,10 +8,10 @@ import styles from './page.module.css';
 import { notifyError } from '@/utils/toastHelper';
 import toast from 'react-hot-toast';
 import { Loader2, Plus, X, ArrowLeft, Box, Layers } from 'lucide-react';
-import CategorySelector from '@/components/CategorySelector';
-import AttributeForm from '@/components/AttributeForm';
-import VideoManager from '@/components/VideoManager';
-import VariantManager, { VariantItem } from '@/components/VariantManager';
+import CategorySelector from '@/components/product/CategorySelector';
+import AttributeForm from '@/components/product/AttributeForm';
+import VideoManager from '@/components/product/VideoManager';
+import VariantManager, { VariantItem } from '@/components/product/VariantManager';
 import { useCategoryTree } from '@/hooks/useCategories';
 
 export default function AddProductPage() {
@@ -195,7 +195,7 @@ export default function AddProductPage() {
                     <div className={styles.card}>
                         <h3 className={styles.cardTitle}>General Information</h3>
                         <div className={styles.formGroup}>
-                            <label className={styles.label}>Product Name <span style={{color: 'red'}}>*</span></label>
+                            <label className={styles.label}>Product Name <span className={styles.required}>*</span></label>
                             <input name="name" className={styles.input} value={formData.name} onChange={handleChange} placeholder="Enter product name" />
                         </div>
                         <div className={styles.formGroup}>
@@ -204,7 +204,7 @@ export default function AddProductPage() {
                         </div>
                     </div>
                     <div className={styles.card}>
-                        <h3 className={styles.cardTitle}>Media (Images) <span style={{color: 'red'}}>*</span></h3>
+                        <h3 className={styles.cardTitle}>Media (Images) <span className={styles.required}>*</span></h3>
                         <div className={styles.imageGrid}>
                             {previewUrls.map((url, index) => (
                                 <div key={index} className={styles.imageBox}>
@@ -232,11 +232,11 @@ export default function AddProductPage() {
                             <h3 className={styles.cardTitle}>Pricing & Inventory</h3>
                             <div className={styles.row}>
                                 <div className={styles.formGroup}>
-                                    <label className={styles.label}>Price ($) <span style={{color: 'red'}}>*</span></label>
+                                    <label className={styles.label}>Price ($) <span className={styles.required}>*</span></label>
                                     <input name="price" type="number" step="0.01" className={styles.input} value={formData.price} onChange={handleChange} onWheel={(e) => e.currentTarget.blur()} placeholder="e.g. 29.99" />
                                 </div>
                                 <div className={styles.formGroup}>
-                                    <label className={styles.label}>Stock <span style={{color: 'red'}}>*</span></label>
+                                    <label className={styles.label}>Stock <span className={styles.required}>*</span></label>
                                     <input name="countInStock" type="number" className={styles.input} value={formData.countInStock} onChange={handleChange} onWheel={(e) => e.currentTarget.blur()} placeholder="e.g. 50" />
                                 </div>
                             </div>
@@ -246,23 +246,32 @@ export default function AddProductPage() {
                                     <input name="sku" className={styles.input} value={formData.sku} onChange={handleChange} placeholder="Enter SKU" />
                                 </div>
                                 <div className={styles.formGroup}>
-                                    <label className={styles.label}>Brand <span style={{color: 'red'}}>*</span></label>
+                                    <label className={styles.label}>Brand <span className={styles.required}>*</span></label>
                                     <input name="brand" className={styles.input} value={formData.brand} onChange={handleChange} placeholder="Enter brand" />
                                 </div>
                             </div>
                         </div>
                     ) : (
                         <div className={styles.card}>
-                            <h3 className={styles.cardTitle}><Layers size={18} style={{ verticalAlign: 'middle', marginRight: '8px' }}/>Variants Generator</h3>
+                            <h3 className={styles.cardTitle}>
+                                <Layers size={18} style={{ verticalAlign: 'middle', marginRight: '8px' }}/>
+                                Variants Generator
+                            </h3>
+                            <p className={styles.helperText}>
+                                Manage variants. Editing variants will replace the existing configuration.
+                            </p>
                             <VariantManager variants={variants} onChange={setVariants} />
                             <div className={styles.formGroup} style={{ marginTop: '20px' }}>
-                                <label className={styles.label}>Brand <span style={{color: 'red'}}>*</span></label>
+                                <label className={styles.label}>Brand <span className={styles.required}>*</span></label>
                                 <input name="brand" className={styles.input} value={formData.brand} onChange={handleChange} placeholder="Enter brand" />
                             </div>
                         </div>
                     )}
                     <div className={styles.card}>
-                        <h3 className={styles.cardTitle}><Box size={18} style={{ verticalAlign: 'middle', marginRight: '8px' }}/>Shipping & Delivery</h3>
+                        <h3 className={styles.cardTitle}>
+                            <Box size={18} style={{ verticalAlign: 'middle', marginRight: '8px' }}/>
+                            Shipping & Delivery
+                        </h3>
                         <div className={styles.row}>
                             <div className={styles.formGroup}>
                                 <label className={styles.label}>Weight (Gram)</label>
@@ -288,16 +297,37 @@ export default function AddProductPage() {
                 <div className={styles.rightColumn}>
                     <div className={styles.card}>
                         <h3 className={styles.cardTitle}>Status & Visibility</h3>
-                        <div className={styles.formGroup} style={{ marginBottom: '20px', paddingBottom: '20px', borderBottom: '1px solid #f5f5f5' }}>
-                            <label className={styles.label} style={{ marginBottom: '12px' }}>Product Type</label>
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', marginBottom: '10px' }}>
-                                <input type="radio" name="ptype" checked={productType === 'simple'} onChange={() => setProductType('simple')} style={{ accentColor: '#171717', width: '16px', height: '16px' }} />
-                                <div><span style={{ fontSize: '14px', fontWeight: 500, display: 'block' }}>Simple Product</span></div>
-                            </label>
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
-                                <input type="radio" name="ptype" checked={productType === 'variable'} onChange={() => setProductType('variable')} style={{ accentColor: '#171717', width: '16px', height: '16px' }} />
-                                <div><span style={{ fontSize: '14px', fontWeight: 500, display: 'block' }}>Variable Product</span></div>
-                            </label>
+                        <div className={styles.formGroupSeparator}>
+                            <label className={styles.label}>Product Type</label>
+                            
+                            <div className={styles.radioGroup}>
+                                <label className={`${styles.radioOption} ${productType === 'simple' ? styles.radioSelected : ''}`}>
+                                    <input 
+                                        type="radio" 
+                                        name="ptype" 
+                                        checked={productType === 'simple'} 
+                                        onChange={() => setProductType('simple')} 
+                                        className={styles.radioInput}
+                                    />
+                                    <div className={styles.radioInfo}>
+                                        <span className={styles.radioTitle}>Simple Product</span>
+                                        <span className={styles.radioDesc}>Standard item with one SKU</span>
+                                    </div>
+                                </label>
+                                <label className={`${styles.radioOption} ${productType === 'variable' ? styles.radioSelected : ''}`}>
+                                    <input 
+                                        type="radio" 
+                                        name="ptype" 
+                                        checked={productType === 'variable'} 
+                                        onChange={() => setProductType('variable')} 
+                                        className={styles.radioInput}
+                                    />
+                                    <div className={styles.radioInfo}>
+                                        <span className={styles.radioTitle}>Variable Product</span>
+                                        <span className={styles.radioDesc}>Has colors, sizes, etc.</span>
+                                    </div>
+                                </label>
+                            </div>
                         </div>
                         <div className={styles.switchGroup}>
                             <div className={styles.switchLabel}><span>Publish</span><small>Make product visible</small></div>
@@ -313,7 +343,7 @@ export default function AddProductPage() {
                         </div>
                     </div>
                     <div className={styles.card}>
-                        <h3 className={styles.cardTitle}>Organization <span style={{color: 'red'}}>*</span></h3>
+                        <h3 className={styles.cardTitle}>Organization <span className={styles.required}>*</span></h3>
                         <div className={styles.formGroup}>
                             <label className={styles.label}>Category</label>
                             {categoriesLoading ? <div className={styles.loadingText}>Loading...</div> : <CategorySelector tree={tree} onSelect={(id) => setFormData(prev => ({ ...prev, category_id: id }))} />}

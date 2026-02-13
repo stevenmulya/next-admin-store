@@ -8,10 +8,10 @@ import styles from './page.module.css';
 import { notifyError } from '@/utils/toastHelper';
 import toast from 'react-hot-toast';
 import { Loader2, Plus, X, ArrowLeft, Box, Layers, Trash2 } from 'lucide-react';
-import CategorySelector from '@/components/CategorySelector';
-import AttributeForm from '@/components/AttributeForm';
-import VideoManager from '@/components/VideoManager';
-import VariantManager, { VariantItem } from '@/components/VariantManager';
+import CategorySelector from '@/components/product/CategorySelector';
+import AttributeForm from '@/components/product/AttributeForm';
+import VideoManager from '@/components/product/VideoManager';
+import VariantManager, { VariantItem } from '@/components/product/VariantManager';
 import { useCategoryTree } from '@/hooks/useCategories';
 
 export default function EditProductPage() {
@@ -58,8 +58,6 @@ export default function EditProductPage() {
                 const res = await api.get(`/products/${params.id}`);
                 const p = res.data.data;
 
-                // PERBAIKAN DI SINI: Gunakan ( ?? '' ) untuk menangani null/undefined dari API
-                // Kita juga mapping p.stock ke countInStock jika p.countInStock undefined
                 setFormData({
                     name: p.name ?? '',
                     slug: p.slug ?? '',
@@ -67,7 +65,6 @@ export default function EditProductPage() {
                     price: p.price ?? '',
                     brand: p.brand ?? '',
                     category_id: p.category_id ?? null,
-                    // Prioritaskan p.stock jika countInStock tidak ada
                     countInStock: p.countInStock ?? p.stock ?? '', 
                     description: p.description ?? '',
                     similarities: p.similarities ?? '',
@@ -75,7 +72,7 @@ export default function EditProductPage() {
                     length: p.length ?? '',
                     width: p.width ?? '',
                     height: p.height ?? '',
-                    is_published: !!p.is_published, // Paksa jadi boolean
+                    is_published: !!p.is_published,
                     is_pinned: !!p.is_pinned,
                     is_best_seller: !!p.is_best_seller
                 });
@@ -249,8 +246,6 @@ export default function EditProductPage() {
         setIsSaving(true);
         const data = new FormData();
         
-        // PENTING: Backend mengharapkan 'stock', tapi state kita 'countInStock'
-        // Kita harus mapping saat kirim
         Object.entries(formData).forEach(([key, value]) => {
             if (key === 'countInStock') {
                  data.append('stock', String(value));
@@ -319,7 +314,7 @@ export default function EditProductPage() {
                     <div className={styles.card}>
                         <h3 className={styles.cardTitle}>General Information</h3>
                         <div className={styles.formGroup}>
-                            <label className={styles.label}>Product Name <span style={{color: 'red'}}>*</span></label>
+                            <label className={styles.label}>Product Name <span className={styles.required}>*</span></label>
                             <input name="name" className={styles.input} value={formData.name} onChange={handleChange} required placeholder="Enter product name" />
                         </div>
                         <div className={styles.formGroup}>
@@ -329,7 +324,7 @@ export default function EditProductPage() {
                     </div>
 
                     <div className={styles.card}>
-                        <h3 className={styles.cardTitle}>Media (Images) <span style={{color: 'red'}}>*</span></h3>
+                        <h3 className={styles.cardTitle}>Media (Images) <span className={styles.required}>*</span></h3>
                         <div className={styles.imageGrid}>
                             {existingImages.map((img) => (
                                 <div key={img.id} className={styles.imageBox}>
@@ -372,7 +367,7 @@ export default function EditProductPage() {
                             <h3 className={styles.cardTitle}>Pricing & Inventory</h3>
                             <div className={styles.row}>
                                 <div className={styles.formGroup}>
-                                    <label className={styles.label}>Price ($) <span style={{color: 'red'}}>*</span></label>
+                                    <label className={styles.label}>Price ($) <span className={styles.required}>*</span></label>
                                     <input 
                                         name="price" 
                                         type="number" 
@@ -386,8 +381,7 @@ export default function EditProductPage() {
                                     />
                                 </div>
                                 <div className={styles.formGroup}>
-                                    <label className={styles.label}>Stock <span style={{color: 'red'}}>*</span></label>
-                                    {/* VALUE DIJAMIN TIDAK UNDEFINED KARENA SUDAH DITANGANI DI USEEFFECT */}
+                                    <label className={styles.label}>Stock <span className={styles.required}>*</span></label>
                                     <input 
                                         name="countInStock" 
                                         type="number" 
@@ -406,7 +400,7 @@ export default function EditProductPage() {
                                     <input name="sku" className={styles.input} value={formData.sku} onChange={handleChange} placeholder="Enter SKU" />
                                 </div>
                                 <div className={styles.formGroup}>
-                                    <label className={styles.label}>Brand <span style={{color: 'red'}}>*</span></label>
+                                    <label className={styles.label}>Brand <span className={styles.required}>*</span></label>
                                     <input name="brand" className={styles.input} value={formData.brand} onChange={handleChange} required placeholder="Enter brand" />
                                 </div>
                             </div>
@@ -417,13 +411,13 @@ export default function EditProductPage() {
                                 <Layers size={18} style={{ verticalAlign: 'middle', marginRight: '8px' }}/>
                                 Variants Generator
                             </h3>
-                            <p className={styles.helperText} style={{ marginBottom: '16px' }}>
+                            <p className={styles.helperText}>
                                 Manage variants. Editing variants will replace the existing configuration.
                             </p>
                             <VariantManager variants={variants} onChange={setVariants} />
                             
                             <div className={styles.formGroup} style={{ marginTop: '20px' }}>
-                                <label className={styles.label}>Brand <span style={{color: 'red'}}>*</span></label>
+                                <label className={styles.label}>Brand <span className={styles.required}>*</span></label>
                                 <input name="brand" className={styles.input} value={formData.brand} onChange={handleChange} required placeholder="Enter brand" />
                             </div>
                         </div>
@@ -462,36 +456,38 @@ export default function EditProductPage() {
                     <div className={styles.card}>
                         <h3 className={styles.cardTitle}>Status & Visibility</h3>
 
-                        <div className={styles.formGroup} style={{ marginBottom: '20px', paddingBottom: '20px', borderBottom: '1px solid #f5f5f5' }}>
+                        <div className={styles.formGroupSeparator}>
                             <label className={styles.label} style={{ marginBottom: '12px' }}>Product Type</label>
                             
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', marginBottom: '10px' }}>
-                                <input 
-                                    type="radio" 
-                                    name="ptype" 
-                                    checked={productType === 'simple'} 
-                                    onChange={() => setProductType('simple')}
-                                    style={{ accentColor: '#171717', width: '16px', height: '16px' }}
-                                />
-                                <div>
-                                    <span style={{ fontSize: '14px', fontWeight: 500, display: 'block' }}>Simple Product</span>
-                                    <span style={{ fontSize: '11px', color: '#666' }}>Standard item with one SKU</span>
-                                </div>
-                            </label>
+                            <div className={styles.radioGroup}>
+                                <label className={`${styles.radioOption} ${productType === 'simple' ? styles.radioSelected : ''}`}>
+                                    <input 
+                                        type="radio" 
+                                        name="ptype" 
+                                        checked={productType === 'simple'} 
+                                        onChange={() => setProductType('simple')}
+                                        className={styles.radioInput}
+                                    />
+                                    <div className={styles.radioInfo}>
+                                        <span className={styles.radioTitle}>Simple Product</span>
+                                        <span className={styles.radioDesc}>Standard item with one SKU</span>
+                                    </div>
+                                </label>
 
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
-                                <input 
-                                    type="radio" 
-                                    name="ptype" 
-                                    checked={productType === 'variable'} 
-                                    onChange={() => setProductType('variable')}
-                                    style={{ accentColor: '#171717', width: '16px', height: '16px' }}
-                                />
-                                <div>
-                                    <span style={{ fontSize: '14px', fontWeight: 500, display: 'block' }}>Product with Variants</span>
-                                    <span style={{ fontSize: '11px', color: '#666' }}>Has colors, sizes, etc.</span>
-                                </div>
-                            </label>
+                                <label className={`${styles.radioOption} ${productType === 'variable' ? styles.radioSelected : ''}`}>
+                                    <input 
+                                        type="radio" 
+                                        name="ptype" 
+                                        checked={productType === 'variable'} 
+                                        onChange={() => setProductType('variable')}
+                                        className={styles.radioInput}
+                                    />
+                                    <div className={styles.radioInfo}>
+                                        <span className={styles.radioTitle}>Product with Variants</span>
+                                        <span className={styles.radioDesc}>Has colors, sizes, etc.</span>
+                                    </div>
+                                </label>
+                            </div>
                         </div>
                         
                         <div className={styles.switchGroup}>
@@ -527,7 +523,7 @@ export default function EditProductPage() {
                     </div>
 
                     <div className={styles.card}>
-                        <h3 className={styles.cardTitle}>Organization <span style={{color: 'red'}}>*</span></h3>
+                        <h3 className={styles.cardTitle}>Organization <span className={styles.required}>*</span></h3>
                         <div className={styles.formGroup}>
                             <label className={styles.label}>Category</label>
                             {categoriesLoading ? (

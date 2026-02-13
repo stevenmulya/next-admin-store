@@ -1,0 +1,280 @@
+.container {
+    padding: 24px;
+    background-color: var(--bg-page);
+    min-height: 100vh;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.title {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--text-main);
+}
+
+.description {
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+.addButton {
+    background-color: var(--bg-active);
+    color: var(--text-on-active);
+    padding: 10px 18px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    text-transform: uppercase;
+}
+
+.toolbar {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.searchWrapper {
+    position: relative;
+    max-width: 500px;
+}
+
+.searchIcon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+}
+
+.searchInput {
+    width: 100%;
+    padding: 12px 16px 12px 40px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-card);
+    color: var(--text-main);
+    outline: none;
+}
+
+.filterRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.categoryButtonGroup {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+}
+
+.catBtn {
+    padding: 6px 14px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    color: var(--text-muted);
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.activeCat {
+    background: var(--bg-active);
+    color: var(--text-on-active);
+    border-color: var(--bg-active);
+}
+
+.sortDropdown { position: relative; }
+
+.sortButton {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-main);
+    cursor: pointer;
+}
+
+.rotate { transform: rotate(180deg); }
+
+.dropdownMenu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    z-index: 100;
+    padding: 4px;
+    margin-top: 4px;
+    min-width: 160px;
+}
+
+.dropdownMenu button {
+    display: block;
+    width: 100%;
+    padding: 8px 12px;
+    text-align: left;
+    background: none;
+    border: none;
+    font-size: 13px;
+    color: var(--text-main);
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.dropdownMenu button:hover { background: var(--bg-hover); }
+
+.tableCard {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.scrollWrapper { overflow-x: auto; }
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th {
+    background: var(--bg-sidebar);
+    padding: 14px 20px;
+    font-size: 11px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 700;
+}
+
+.table td {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+}
+
+.tr:hover { background: var(--bg-hover); }
+
+.productInfo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.imgPlaceholder {
+    width: 44px;
+    height: 44px;
+    background: var(--bg-page);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.imgPlaceholder img { width: 100%; height: 100%; object-fit: cover; }
+
+.itemName { font-weight: 700; font-size: 14px; color: var(--text-main); }
+.itemSlug { font-size: 11px; color: var(--text-muted); font-family: monospace; }
+
+.typeTag {
+    font-size: 10px;
+    font-weight: 800;
+    background: var(--bg-hover);
+    color: var(--text-muted);
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    display: inline-block;
+    margin-bottom: 4px;
+}
+
+.catText { font-size: 13px; font-weight: 500; }
+
+.priceText { font-weight: 800; font-size: 15px; margin-bottom: 2px; }
+.stockText { font-size: 12px; color: #10b981; font-weight: 600; }
+.lowStock { font-size: 12px; color: #ef4444; font-weight: 700; }
+
+.statusBadge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.active { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+.draft { background: var(--bg-hover); color: var(--text-muted); }
+.archived { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+
+.actions { display: flex; justify-content: flex-end; gap: 8px; }
+.actions button {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--text-muted);
+}
+
+.actions button:hover { color: var(--text-main); border-color: var(--text-main); }
+.deleteBtn:hover { background: #ef4444 !important; color: white !important; border-color: #ef4444 !important; }
+
+.pagination {
+    padding: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    border-top: 1px solid var(--border-color);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.pagination button {
+    background: none;
+    border: 1px solid var(--border-color);
+    padding: 4px;
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--text-main);
+}
+
+.pagination button:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.loadingBox { height: 300px; display: flex; align-items: center; justify-content: center; }
+.spinner { animation: spin 1s linear infinite; color: var(--text-muted); }
+
+.emptyState { padding: 60px; text-align: center; color: var(--text-muted); }
+
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }

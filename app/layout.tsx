@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
-import { AuthProvider } from "@/context/AuthContext";
-import { Toaster } from "react-hot-toast";
+import { Providers } from "@/components/Providers";
 
 const jakarta = Plus_Jakarta_Sans({ 
   subsets: ["latin"],
@@ -20,32 +19,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={jakarta.className}>
-        <AuthProvider>
-            <Toaster 
-              position="bottom-right" 
-              toastOptions={{
-                style: {
-                  background: 'var(--bg-active)',
-                  color: 'var(--text-on-active)',
-                  fontSize: '13px',
-                  fontWeight: '500',
-                  padding: '12px 20px',
-                  borderRadius: '4px',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                  border: '1px solid var(--border-color)'
-                },
-                success: {
-                  iconTheme: { primary: 'var(--text-on-active)', secondary: 'var(--bg-active)' },
-                },
-                error: {
-                  iconTheme: { primary: 'var(--text-on-active)', secondary: 'var(--bg-active)' },
-                },
-              }}
-            />
-            {children}
-        </AuthProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

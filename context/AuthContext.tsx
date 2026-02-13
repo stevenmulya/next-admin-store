@@ -29,18 +29,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     useEffect(() => {
         const checkUser = async () => {
             const token = getCookie('token');
-            if (token) {
-                try {
-                    const response = await api.get('/users/profile');
-                    const userData = response.data.data; 
-                    setUser(userData);
-                } catch (error) {
-                    deleteCookie('token');
-                    setUser(null);
-                }
+            
+            if (!token) {
+                setLoading(false);
+                return;
             }
-            setLoading(false);
+
+            try {
+                const response = await api.get('/users/profile');
+                const userData = response.data.data; 
+                setUser(userData);
+            } catch (error) {
+                deleteCookie('token');
+                setUser(null);
+            } finally {
+                setLoading(false);
+            }
         };
+
         checkUser();
     }, []);
 
@@ -48,14 +54,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setCookie('token', token, { 
             maxAge: 30 * 24 * 60 * 60,
             path: '/',
-            sameSite: 'lax'
+            sameSite: 'lax',
+            secure: process.env.NODE_ENV === 'production'
         });
         setUser(userData);
         router.replace('/dashboard');
     };
 
     const logout = () => {
-        deleteCookie('token');
+        deleteCookie('token', { path: '/' });
         setUser(null);
         router.replace('/login');
     };
