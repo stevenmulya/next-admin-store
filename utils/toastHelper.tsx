@@ -1,113 +1,68 @@
 import toast from 'react-hot-toast';
-import React from 'react';
-import { X } from 'lucide-react';
 
-export const notifyError = (message: string) => {
-    toast.error((t) => (
-        <div style={{ width: '100%', minWidth: '240px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                <span style={{ fontSize: '13px', fontWeight: 500, color: '#ffffff', lineHeight: '1.4', paddingRight: '10px' }}>
-                    {message}
-                </span>
-                
-                <button 
-                    onClick={() => toast.dismiss(t.id)}
-                    style={{
-                        background: 'transparent',
-                        border: 'none',
-                        color: '#737373',
-                        cursor: 'pointer',
-                        padding: '0',
-                        marginTop: '2px',
-                        display: 'flex'
-                    }}
-                >
-                    <X size={14} />
-                </button>
-            </div>
+const toastBase = {
+  borderRadius: '0px',
+  fontSize: '9px',
+  padding: '12px 16px',
+  letterSpacing: '0.08em',
+  maxWidth: '350px',
+};
 
-            <div style={{ 
-                borderTop: '1px solid #262626',
-                paddingTop: '6px',
-                marginTop: '4px',
-                fontSize: '11px',
-                color: '#737373',
-                fontFamily: 'sans-serif'
-            }}>
-                Technical issue?{' '}
-                <a 
-                    href="https://wa.me/6287773298907" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    style={{ 
-                        color: '#e5e5e5',
-                        fontWeight: 600,
-                        textDecoration: 'underline',
-                        cursor: 'pointer',
-                        marginLeft: '2px'
-                    }}
-                >
-                    Contact Support
-                </a>
-            </div>
-        </div>
-    ), { 
-        id: message, 
-        duration: 6000, 
-        position: 'bottom-right',
-        style: {
-            background: '#0a0a0a',
-            border: '1px solid #262626',
-            color: '#ffffff',
-            borderRadius: '4px',
-            padding: '12px 16px',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
-        },
-        iconTheme: {
-            primary: '#ffffff',
-            secondary: '#000000',
-        },
-    });
+export const notifyError = (message: any) => {
+  const displayMessage = typeof message === 'string' ? message : 'System Error';
+  
+  toast.error((t) => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+      <div style={{ fontWeight: 800 }}>[ ERROR ]</div>
+      <div style={{ opacity: 0.9 }}>{displayMessage.toUpperCase()}</div>
+      <div style={{ 
+        marginTop: '6px', 
+        paddingTop: '8px', 
+        borderTop: '1px solid rgba(255,255,255,0.2)', 
+        fontSize: '8px'
+      }}>
+        PLEASE CONTACT{' '}
+        <a 
+          href="https://wa.me/6287773298907" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          style={{ textDecoration: 'underline', color: '#fff', fontWeight: 700 }}
+        >
+          SUPPORT
+        </a>
+        {' '}IF THE ISSUE PERSISTS.
+      </div>
+    </div>
+  ), {
+    id: displayMessage,
+    position: 'bottom-right',
+    icon: null,
+    style: {
+      ...toastBase,
+      background: '#991b1b',
+      color: '#ffffff',
+      border: '1px solid #7f1d1d',
+    },
+    duration: 6000,
+  });
 };
 
 export const notifySuccess = (message: string) => {
-    toast.success((t) => (
-        <div style={{ width: '100%', minWidth: '240px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <span style={{ fontSize: '13px', fontWeight: 500, color: '#ffffff', lineHeight: '1.4', paddingRight: '10px' }}>
-                {message}
-            </span>
-            
-            <button 
-                onClick={() => toast.dismiss(t.id)}
-                style={{
-                    background: 'transparent',
-                    border: 'none',
-                    color: '#737373',
-                    cursor: 'pointer',
-                    padding: '0',
-                    marginTop: '2px',
-                    display: 'flex',
-                    flexShrink: 0
-                }}
-            >
-                <X size={14} />
-            </button>
-        </div>
-    ), { 
-        id: message,
-        duration: 4000,
-        position: 'bottom-right',
-        style: {
-            background: '#0a0a0a',
-            border: '1px solid #262626',
-            color: '#ffffff',
-            borderRadius: '4px',
-            padding: '12px 16px',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
-        },
-        iconTheme: {
-            primary: '#ffffff',
-            secondary: '#000000',
-        },
-    });
+  toast.success((t) => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+      <div style={{ fontWeight: 800 }}>[ SUCCESS ]</div>
+      <div style={{ opacity: 0.9 }}>{message.toUpperCase()}</div>
+    </div>
+  ), {
+    id: message,
+    position: 'bottom-right',
+    icon: null,
+    style: {
+      ...toastBase,
+      background: '#064e3b',
+      color: '#ffffff',
+      border: '1px solid #065f46',
+    },
+    duration: 3000,
+  });
 };

@@ -1,255 +1,170 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import api from '@/services/api';
-import styles from './page.module.css';
 import { notifyError, notifySuccess } from '@/utils/toastHelper';
-import { 
-    Plus, Search, Loader2, PackageOpen, 
-    Mail, Phone, Clock, Calendar,
-    ShieldCheck, Trash2, Eye, Copy, 
-    ChevronLeft, ChevronRight, User
-} from 'lucide-react';
+import { Plus, Edit2, Trash2 } from 'lucide-react';
+import { DataTable } from '@/components/ui/DataTable';
+import { Toolbar } from '@/components/ui/Toolbar';
+import styles from './page.module.css';
 
-interface Customer {
-    id: string;
-    name: string;
-    email: string;
-    phone?: string;
-    is_verified: boolean;
-    is_active: boolean;
-    last_login_at?: string;
-    createdAt: string;
-}
+export default function UserListPage() {
+  const router = useRouter();
+  const [users, setUsers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterRole, setFilterRole] = useState('ALL');
+  const [pagination, setPagination] = useState({
+    page: 1,
+    lastPage: 1,
+    total: 0
+  });
 
-export default function CustomerListPage() {
-    const router = useRouter();
-    const [customers, setCustomers] = useState<Customer[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    
-    const [page, setPage] = useState(1);
-    const [limit] = useState(10);
-    const [totalPages, setTotalPages] = useState(1);
-    const [totalData, setTotalData] = useState(0);
-    const [searchQuery, setSearchQuery] = useState("");
-    const [debouncedSearch, setDebouncedSearch] = useState("");
-
-    useEffect(() => {
-        const handler = setTimeout(() => {
-            setDebouncedSearch(searchQuery);
-            setPage(1);
-        }, 500);
-        return () => clearTimeout(handler);
-    }, [searchQuery]);
-
-    const fetchCustomers = useCallback(async () => {
-        setIsLoading(true);
-        try {
-            const params = {
-                page,
-                limit,
-                search: debouncedSearch,
-                sort: 'newest'
-            };
-
-            const response = await api.get('/customers', { params });
-            const { data, meta } = response.data;
-
-            setCustomers(Array.isArray(data) ? data : []);
-            if (meta) {
-                setTotalPages(meta.total_pages);
-                setTotalData(meta.total_data);
-            }
-        } catch (error) {
-            notifyError('Failed to load customers');
-            setCustomers([]);
-        } finally {
-            setIsLoading(false);
+  const fetchUsers = useCallback(async (pageNumber = 1) => {
+    try {
+      setLoading(true);
+      const res: any = await api.get('/users', {
+        params: {
+          page: pageNumber,
+          search: searchQuery || undefined,
+          role: filterRole === 'ALL' ? undefined : filterRole
         }
-    }, [page, limit, debouncedSearch]);
+      });
+      
+      let items = [];
+      let meta = { page: 1, lastPage: 1, total: 0 };
 
-    useEffect(() => {
-        fetchCustomers();
-    }, [fetchCustomers]);
+      if (res?.data?.data?.items) {
+        items = res.data.data.items;
+        meta = res.data.data.meta || meta;
+      } else if (res?.data?.items) {
+        items = res.data.items;
+        meta = res.data.meta || meta;
+      } else if (res?.items) {
+        items = res.items;
+        meta = res.meta || meta;
+      }
 
-    const handleDelete = async (id: string) => {
-        if (!confirm('Are you sure you want to delete this customer? This action cannot be undone.')) return;
-        try {
-            await api.delete(`/customers/${id}`);
-            notifySuccess('Customer removed successfully');
-            fetchCustomers();
-        } catch (error: any) {
-            notifyError(error.response?.data?.message || 'Delete failed');
-        }
-    };
+      setUsers(items);
+      setPagination({
+        page: meta.page,
+        lastPage: meta.lastPage,
+        total: meta.total
+      });
+    } catch (error) {
+      notifyError("Database synchronization failed");
+    } finally {
+      setLoading(false);
+    }
+  }, [searchQuery, filterRole]);
 
-    const copyToClipboard = (text: string) => {
-        navigator.clipboard.writeText(text);
-        notifySuccess('Email copied to clipboard');
-    };
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      fetchUsers(1);
+    }, 500);
 
-    const formatDate = (dateString?: string) => {
-        if (!dateString) return '-';
-        return new Date(dateString).toLocaleDateString('en-US', {
-            day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
-        });
-    };
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery, filterRole, fetchUsers]);
 
-    return (
-        <div className={styles.container}>
-            <div className={styles.header}>
-                <div className={styles.headerText}>
-                    <h1 className={styles.title}>Customer Management</h1>
-                    <p className={styles.description}>
-                        Showing {customers.length} of {totalData} registered users.
-                    </p>
-                </div>
-                <Link href="/dashboard/users/add" className={styles.addButton}>
-                    <Plus size={16} /> Add Customer
-                </Link>
-            </div>
+  const onPageChange = (newPage: number) => {
+    setPagination(prev => ({ ...prev, page: newPage }));
+    fetchUsers(newPage);
+  };
 
-            <div className={styles.toolbar}>
-                <div className={styles.searchWrapper}>
-                    <Search size={18} className={styles.searchIcon} />
-                    <input 
-                        type="text" 
-                        placeholder="Search name, email, or phone..." 
-                        className={styles.searchInput}
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                </div>
-            </div>
+  const handleDelete = async (id: number, name: string) => {
+    if (confirm(`Terminate access for: ${name.toUpperCase()}?`)) {
+      try {
+        await api.delete(`/users/${id}`);
+        notifySuccess("Record purged");
+        fetchUsers(pagination.page);
+      } catch (error) {
+        notifyError("Termination failed");
+      }
+    }
+  };
 
-            <div className={styles.tableCard}>
-                {isLoading ? (
-                    <div className={styles.loadingBox}><Loader2 size={24} className="animate-spin" /></div>
-                ) : customers.length === 0 ? (
-                    <div className={styles.emptyState}>
-                        <PackageOpen size={48} strokeWidth={1} />
-                        <p>No customers found matching your criteria.</p>
-                    </div>
-                ) : (
-                    <>
-                        <div className={styles.scrollWrapper}>
-                            <table className={styles.table}>
-                                <thead>
-                                    <tr>
-                                        <th className={styles.th}>Customer Profile</th>
-                                        <th className={styles.th}>Status</th>
-                                        <th className={styles.th}>Contact Info</th>
-                                        <th className={styles.th}>Activity</th>
-                                        <th className={styles.th} style={{ textAlign: 'center' }}>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {customers.map((customer) => (
-                                        <tr key={customer.id} className={styles.tr} onClick={() => router.push(`/dashboard/users/view/${customer.id}`)}>
-                                            <td className={styles.td}>
-                                                <div className={styles.profileCell}>
-                                                    <div className={styles.avatar}>
-                                                        {customer.name.charAt(0).toUpperCase()}
-                                                    </div>
-                                                    <div className={styles.profileInfo}>
-                                                        <span className={styles.customerName}>{customer.name}</span>
-                                                        <span className={styles.customerId}>ID: {customer.id.slice(0, 8)}...</span>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className={styles.td}>
-                                                <div className={styles.statusStack}>
-                                                    {customer.is_verified ? (
-                                                        <span className={styles.badgeVerified}>
-                                                            <ShieldCheck size={10} /> Verified
-                                                        </span>
-                                                    ) : (
-                                                        <span className={styles.badgeUnverified}>
-                                                            Unverified
-                                                        </span>
-                                                    )}
-                                                    {customer.is_active ? (
-                                                        <span className={styles.badgeActive}>Active</span>
-                                                    ) : (
-                                                        <span className={styles.badgeBanned}>Banned</span>
-                                                    )}
-                                                </div>
-                                            </td>
-                                            <td className={styles.td}>
-                                                <div className={styles.contactStack}>
-                                                    <div 
-                                                        className={styles.contactRow} 
-                                                        onClick={(e) => { e.stopPropagation(); copyToClipboard(customer.email); }}
-                                                        title="Click to copy email"
-                                                    >
-                                                        <Mail size={12} /> {customer.email}
-                                                    </div>
-                                                    <div className={styles.contactRow}>
-                                                        <Phone size={12} /> {customer.phone || '-'}
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className={styles.td}>
-                                                <div className={styles.activityBox}>
-                                                    <div className={styles.activityRow}>
-                                                        <Clock size={10} />
-                                                        <span>Login: {formatDate(customer.last_login_at)}</span>
-                                                    </div>
-                                                    <div className={styles.activityRow}>
-                                                        <Calendar size={10} />
-                                                        <span>Joined: {formatDate(customer.createdAt)}</span>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className={styles.td}>
-                                                <div className={styles.actions}>
-                                                    <Link href={`/dashboard/users/view/${customer.id}`} className={styles.actionBtn} title="View Details" onClick={(e) => e.stopPropagation()}>
-                                                        <Eye size={14} />
-                                                    </Link>
-                                                    <button 
-                                                        className={`${styles.actionBtn} ${styles.deleteBtn}`} 
-                                                        title="Delete Customer" 
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleDelete(customer.id);
-                                                        }}
-                                                    >
-                                                        <Trash2 size={14} />
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+  const headers = ['UID', 'IDENTIFIER', 'EMAIL_ADDRESS', 'PRIVILEGE', 'STATUS', 'ACTION'];
 
-                        <div className={styles.paginationContainer}>
-                            <button 
-                                onClick={() => setPage(p => Math.max(1, p - 1))} 
-                                disabled={page === 1}
-                                className={styles.pageBtn}
-                            >
-                                <ChevronLeft size={16} /> Prev
-                            </button>
-                            
-                            <span className={styles.pageInfo}>
-                                Page {page} of {totalPages}
-                            </span>
-
-                            <button 
-                                onClick={() => setPage(p => Math.min(totalPages, p + 1))} 
-                                disabled={page === totalPages || totalPages === 0}
-                                className={styles.pageBtn}
-                            >
-                                Next <ChevronRight size={16} />
-                            </button>
-                        </div>
-                    </>
-                )}
-            </div>
+  return (
+    <div className="reveal-line">
+      <div className={styles.header}>
+        <div>
+          <h1 className={styles.title}>User Management</h1>
+          <p className={styles.subtitle}>System directory</p>
         </div>
-    );
+        <button className={styles.addBtn} onClick={() => router.push('/dashboard/users/add')}>
+          <Plus size={16} />
+          <span>Add User</span>
+        </button>
+      </div>
+
+      <Toolbar 
+        searchPlaceholder="Search by name or email..."
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        filters={[
+          {
+            label: 'ALL PRIVILEGES',
+            value: filterRole,
+            options: [
+              { label: 'OWNER', value: 'OWNER' },
+              { label: 'STAFF', value: 'STAFF' }
+            ],
+            onChange: setFilterRole
+          }
+        ]}
+      />
+
+      <DataTable 
+        headers={headers}
+        pagination={{
+          currentPage: pagination.page,
+          lastPage: pagination.lastPage,
+          onPageChange: onPageChange
+        }}
+      >
+        {loading ? (
+          <tr>
+            <td colSpan={headers.length}>
+              <div className={styles.loadingState}>
+                <div className={styles.spinner}></div>
+                <p>FETCHING_DATA...</p>
+              </div>
+            </td>
+          </tr>
+        ) : users.length > 0 ? (
+          users.map((u: any) => (
+            <tr key={u.id}>
+              <td className={styles.mono}>#{u.id}</td>
+              <td className={styles.bold}>{u.name?.toUpperCase()}</td>
+              <td>{u.email}</td>
+              <td><span className={styles.tag}>{u.role}</span></td>
+              <td>
+                <span className={u.deletedAt ? styles.statusInactive : styles.statusActive}>
+                  {u.deletedAt ? 'INACTIVE' : 'ACTIVE'}
+                </span>
+              </td>
+              <td style={{ textAlign: 'right' }}>
+                <div className={styles.actionGroup}>
+                  <button className={styles.actionBtn} onClick={() => router.push(`/dashboard/users/edit?id=${u.id}`)}>
+                    <Edit2 size={14} />
+                  </button>
+                  <button className={`${styles.actionBtn} ${styles.deleteBtn}`} onClick={() => handleDelete(u.id, u.name)}>
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </td>
+            </tr>
+          ))
+        ) : (
+          <tr>
+            <td colSpan={headers.length}>
+              <div className={styles.emptyState}>NO_RECORDS_FOUND</div>
+            </td>
+          </tr>
+        )}
+      </DataTable>
+    </div>
+  );
 }

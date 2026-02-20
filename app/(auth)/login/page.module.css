@@ -1,52 +1,69 @@
 .container {
-  min-height: 100vh;
-  width: 100%;
+  height: 100vh;
+  width: 100vw;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--bg-body);
-  padding: 0;
-  margin: 0;
+  background-color: var(--bg-page);
 }
 
 .card {
-  background-color: var(--bg-card);
   width: 100%;
-  max-width: 380px;
-  padding: 48px 40px;
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow-card);
-  border-radius: var(--radius);
+  max-width: 340px;
+  aspect-ratio: 1 / 1;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .header {
-  margin-bottom: 32px;
+  margin-bottom: 20px;
 }
 
 .title {
-  font-size: 24px;
-  font-weight: 600;
+  font-size: var(--font-xl);
+  font-weight: 700;
+  letter-spacing: -0.04em;
   color: var(--text-main);
-  margin-bottom: 8px;
-  letter-spacing: -0.03em;
+  line-height: 1;
+  text-transform: uppercase;
 }
 
 .subtitle {
-  font-size: 14px;
+  font-size: 9px;
   color: var(--text-muted);
-  line-height: 1.5;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-top: 8px;
 }
 
 .formGroup {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .label {
   display: block;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 10px;
+  font-weight: 700;
   color: var(--text-main);
-  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+
+.input {
+  width: 100%;
+  height: 36px;
+  padding: 0 10px;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  font-size: var(--font-sm);
+  outline: none;
+  transition: all 0.2s ease;
 }
 
 .passwordWrapper {
@@ -55,67 +72,71 @@
   align-items: center;
 }
 
-.input {
+.passwordInput {
   width: 100%;
-  padding: 10px 12px;
-  font-size: 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  outline: none;
-  transition: all 0.15s ease;
-  background-color: #fff;
+  height: 36px;
+  padding: 0 45px 0 10px;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-color);
   color: var(--text-main);
-  box-sizing: border-box;
+  font-size: var(--font-sm);
+  outline: none;
+  transition: all 0.2s ease;
 }
 
-.passwordWrapper .input {
-  padding-right: 45px;
-}
-
-.input:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 1px var(--primary);
+.input:focus, .passwordInput:focus {
+  background-color: var(--bg-hover);
+  box-shadow: inset 0 0 0 1px var(--text-main);
 }
 
 .eyeBtn {
   position: absolute;
-  right: 12px;
-  background: none;
+  right: 10px;
+  background: transparent;
   border: none;
   color: var(--text-muted);
+  font-size: 8px;
+  font-weight: 700;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   padding: 4px;
-  transition: color 0.2s;
-}
-
-.eyeBtn:hover {
-  color: var(--primary);
 }
 
 .submitBtn {
   width: 100%;
-  padding: 12px;
-  background-color: var(--primary);
-  color: white;
-  border: 1px solid var(--primary);
-  border-radius: var(--radius);
-  font-size: 14px;
-  font-weight: 500;
+  height: 38px;
+  background-color: var(--bg-active);
+  color: var(--text-on-active);
+  border: none;
+  font-weight: 700;
+  font-size: 10px;
   cursor: pointer;
-  transition: all 0.2s;
-  margin-top: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  margin-top: 10px;
 }
 
-.submitBtn:hover {
-  background-color: var(--primary-hover);
-  border-color: var(--primary-hover);
+.footer {
+  border-top: 1px solid var(--border-color);
+  padding-top: 16px;
 }
 
-.submitBtn:disabled {
-  background-color: #a3a3a3;
-  border-color: #a3a3a3;
-  cursor: not-allowed;
+.linkGroup {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footerLink {
+  font-size: 9px;
+  color: var(--text-muted);
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.footerLink:hover {
+  color: var(--text-main);
+  text-decoration: underline;
 }
