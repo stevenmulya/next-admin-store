@@ -48,19 +48,21 @@
   font-weight: 800;
 }
 
-.statusActive { color: var(--success); font-weight: 700; }
-.statusInactive { color: var(--text-muted); }
+.actionColumn {
+  text-align: right;
+}
 
 .actionGroup {
   display: flex;
   gap: 8px;
   justify-content: flex-end;
+  align-items: center;
 }
 
 .actionBtn {
   width: 32px;
   height: 32px;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   background: transparent;

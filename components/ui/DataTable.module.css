@@ -26,6 +26,10 @@
   border-bottom: 1px solid var(--border-color);
 }
 
+.table th:last-child {
+  text-align: right;
+}
+
 .table td {
   padding: 16px 20px;
   border-bottom: 1px solid var(--border-color);

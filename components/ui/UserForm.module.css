@@ -1,30 +1,3 @@
-.wrapper {
-  width: 100%;
-  min-height: calc(100vh - var(--header-height));
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
-  padding: 60px;
-}
-
-.header {
-  margin-bottom: 48px;
-  border-bottom: 1px solid var(--border-color);
-  padding-bottom: 24px;
-}
-
-.title {
-  font-size: 24px;
-  font-weight: 700;
-  color: var(--text-main);
-  letter-spacing: -0.03em;
-}
-
-.subtitle {
-  font-size: 14px;
-  color: var(--text-muted);
-  margin-top: 4px;
-}
-
 .form {
   display: flex;
   flex-direction: column;
@@ -35,13 +8,13 @@
   display: flex;
   flex-direction: column;
   gap: 32px;
-  max-width: 900px; /* Lebar optimal untuk keterbacaan */
+  max-width: 800px;
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .labelBlock {
@@ -50,86 +23,69 @@
 }
 
 .label {
-  font-size: 14px;
+  font-size: var(--font-sm); /* Konsisten dengan font aplikasi */
   font-weight: 600;
   color: var(--text-main);
 }
 
 .helper {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text-muted);
-  margin-top: 2px;
+  margin-top: 1px;
 }
 
 .input, .select {
   width: 100%;
-  height: 48px;
+  height: 40px; /* Lebih kecil & proporsional */
   background-color: var(--bg-input);
   border: 1px solid var(--border-color);
   color: var(--text-main);
-  font-size: 14px;
-  padding: 0 16px;
+  font-size: var(--font-sm);
+  padding: 0 12px;
   outline: none;
   transition: all 0.2s ease;
 }
 
-.input::placeholder {
-  color: var(--placeholder);
-  opacity: 0.7;
-}
-
 .input:focus, .select:focus {
   border-color: var(--text-main);
-  background-color: var(--bg-card);
 }
 
 .row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 32px;
+  gap: 24px;
 }
 
 .footer {
   display: flex;
   justify-content: flex-start;
-  gap: 16px;
-  padding-top: 40px;
+  gap: 12px;
+  padding-top: 32px;
   border-top: 1px solid var(--border-color);
 }
 
 .cancelBtn {
-  height: 48px;
-  padding: 0 24px;
+  height: 36px; /* Mengecilkan ukuran tombol */
+  padding: 0 16px;
   background: transparent;
   border: 1px solid var(--border-color);
   color: var(--text-muted);
-  font-size: 14px;
+  font-size: var(--font-sm);
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
-}
-
-.cancelBtn:hover {
-  background-color: var(--bg-hover);
-  color: var(--text-main);
 }
 
 .submitBtn {
-  height: 48px;
-  padding: 0 32px;
+  height: 36px; /* Mengecilkan ukuran tombol */
+  padding: 0 20px;
   background-color: var(--bg-active);
   color: var(--text-on-active);
   border: none;
-  font-size: 14px;
+  font-size: var(--font-sm);
   font-weight: 600;
   cursor: pointer;
-  transition: opacity 0.2s;
 }
 
 .submitBtn:disabled {
   opacity: 0.5;
-}
-
-.submitBtn:hover:not(:disabled) {
-  opacity: 0.9;
 }

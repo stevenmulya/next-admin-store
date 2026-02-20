@@ -35,15 +35,13 @@ export default function UserListPage() {
       let items = [];
       let meta = { page: 1, lastPage: 1, total: 0 };
 
-      if (res?.data?.data?.items) {
-        items = res.data.data.items;
-        meta = res.data.data.meta || meta;
-      } else if (res?.data?.items) {
-        items = res.data.items;
-        meta = res.data.meta || meta;
-      } else if (res?.items) {
-        items = res.items;
-        meta = res.meta || meta;
+      const responseData = res?.data?.data || res?.data || res;
+      
+      if (responseData?.items) {
+        items = responseData.items;
+        meta = responseData.meta || meta;
+      } else if (Array.isArray(responseData)) {
+        items = responseData;
       }
 
       setUsers(items);
@@ -61,6 +59,7 @@ export default function UserListPage() {
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
+      setPagination(prev => ({ ...prev, page: 1 }));
       fetchUsers(1);
     }, 500);
 
@@ -84,7 +83,7 @@ export default function UserListPage() {
     }
   };
 
-  const headers = ['UID', 'IDENTIFIER', 'EMAIL_ADDRESS', 'PRIVILEGE', 'STATUS', 'ACTION'];
+  const headers = ['UID', 'IDENTIFIER', 'EMAIL_ADDRESS', 'PRIVILEGE', 'ACTION'];
 
   return (
     <div className="reveal-line">
@@ -109,6 +108,7 @@ export default function UserListPage() {
             value: filterRole,
             options: [
               { label: 'OWNER', value: 'OWNER' },
+              { label: 'MANAGER', value: 'MANAGER' },
               { label: 'STAFF', value: 'STAFF' }
             ],
             onChange: setFilterRole
@@ -140,17 +140,18 @@ export default function UserListPage() {
               <td className={styles.bold}>{u.name?.toUpperCase()}</td>
               <td>{u.email}</td>
               <td><span className={styles.tag}>{u.role}</span></td>
-              <td>
-                <span className={u.deletedAt ? styles.statusInactive : styles.statusActive}>
-                  {u.deletedAt ? 'INACTIVE' : 'ACTIVE'}
-                </span>
-              </td>
-              <td style={{ textAlign: 'right' }}>
+              <td className={styles.actionColumn}>
                 <div className={styles.actionGroup}>
-                  <button className={styles.actionBtn} onClick={() => router.push(`/dashboard/users/edit?id=${u.id}`)}>
+                  <button 
+                    className={styles.actionBtn} 
+                    onClick={() => router.push(`/dashboard/users/${u.id}/edit`)}
+                  >
                     <Edit2 size={14} />
                   </button>
-                  <button className={`${styles.actionBtn} ${styles.deleteBtn}`} onClick={() => handleDelete(u.id, u.name)}>
+                  <button 
+                    className={`${styles.actionBtn} ${styles.deleteBtn}`} 
+                    onClick={() => handleDelete(u.id, u.name)}
+                  >
                     <Trash2 size={14} />
                   </button>
                 </div>
