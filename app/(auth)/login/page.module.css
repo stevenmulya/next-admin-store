@@ -9,55 +9,47 @@
 
 .card {
   width: 100%;
-  max-width: 340px;
-  aspect-ratio: 1 / 1;
+  max-width: 360px;
   background-color: var(--bg-card);
   border: 1px solid var(--border-color);
-  padding: 40px;
+  padding: 48px 40px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
 }
 
 .header {
-  margin-bottom: 20px;
+  margin-bottom: 32px;
 }
 
 .title {
   font-size: var(--font-xl);
   font-weight: 700;
-  letter-spacing: -0.04em;
   color: var(--text-main);
-  line-height: 1;
-  text-transform: uppercase;
+  line-height: 1.2;
 }
 
 .subtitle {
-  font-size: 9px;
+  font-size: var(--font-xs);
   color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
   margin-top: 8px;
 }
 
 .formGroup {
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .label {
   display: block;
-  font-size: 10px;
-  font-weight: 700;
+  font-size: var(--font-xs);
+  font-weight: 600;
   color: var(--text-main);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
-.input {
+.input, .passwordInput {
   width: 100%;
-  height: 36px;
-  padding: 0 10px;
+  height: 40px;
+  padding: 0 12px;
   background-color: var(--bg-input);
   border: 1px solid var(--border-color);
   color: var(--text-main);
@@ -73,70 +65,69 @@
 }
 
 .passwordInput {
-  width: 100%;
-  height: 36px;
-  padding: 0 45px 0 10px;
-  background-color: var(--bg-input);
-  border: 1px solid var(--border-color);
-  color: var(--text-main);
-  font-size: var(--font-sm);
-  outline: none;
-  transition: all 0.2s ease;
+  padding-right: 50px;
 }
 
 .input:focus, .passwordInput:focus {
   background-color: var(--bg-hover);
-  box-shadow: inset 0 0 0 1px var(--text-main);
+  border-color: var(--text-main);
 }
 
 .eyeBtn {
   position: absolute;
-  right: 10px;
+  right: 12px;
   background: transparent;
   border: none;
   color: var(--text-muted);
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 700;
   cursor: pointer;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 4px;
 }
 
 .submitBtn {
   width: 100%;
-  height: 38px;
+  height: 42px;
   background-color: var(--bg-active);
   color: var(--text-on-active);
   border: none;
   font-weight: 700;
-  font-size: 10px;
+  font-size: var(--font-sm);
   cursor: pointer;
-  text-transform: uppercase;
-  letter-spacing: 0.2em;
-  margin-top: 10px;
+  margin-top: 12px;
+  transition: opacity 0.2s ease;
+}
+
+.submitBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .footer {
+  margin-top: 32px;
+  padding-top: 24px;
   border-top: 1px solid var(--border-color);
-  padding-top: 16px;
 }
 
 .linkGroup {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.footerText {
+  font-size: 11px;
+  color: var(--text-muted);
 }
 
 .footerLink {
-  font-size: 9px;
-  color: var(--text-muted);
+  font-size: 11px;
+  color: var(--text-main);
+  font-weight: 700;
   text-decoration: none;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
 }
 
 .footerLink:hover {
-  color: var(--text-main);
   text-decoration: underline;
 }

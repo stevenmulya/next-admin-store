@@ -4,9 +4,10 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/services/api';
 import { notifyError, notifySuccess } from '@/utils/toastHelper';
-import { Plus, Edit2, Trash2 } from 'lucide-react';
+import { Edit2, Trash2 } from 'lucide-react';
 import { DataTable } from '@/components/ui/DataTable';
 import { Toolbar } from '@/components/ui/Toolbar';
+import { PageHeader } from '@/components/ui/PageHeader';
 import styles from './page.module.css';
 
 export default function UserListPage() {
@@ -87,29 +88,25 @@ export default function UserListPage() {
 
   return (
     <div className="reveal-line">
-      <div className={styles.header}>
-        <div>
-          <h1 className={styles.title}>User Management</h1>
-          <p className={styles.subtitle}>System directory</p>
-        </div>
-        <button className={styles.addBtn} onClick={() => router.push('/dashboard/users/add')}>
-          <Plus size={16} />
-          <span>Add User</span>
-        </button>
-      </div>
+      <PageHeader 
+        title="Admin Management"
+        description="Manage system access and user roles. This section is restricted to Owners to ensure secure administrative oversight."
+        actionLabel="Add User"
+        onAction={() => router.push('/dashboard/users/add')}
+      />
 
       <Toolbar 
-        searchPlaceholder="Search by name or email..."
+        searchPlaceholder="Search records..."
         searchValue={searchQuery}
         onSearchChange={setSearchQuery}
         filters={[
           {
-            label: 'ALL PRIVILEGES',
+            label: 'Role',
             value: filterRole,
             options: [
-              { label: 'OWNER', value: 'OWNER' },
-              { label: 'MANAGER', value: 'MANAGER' },
-              { label: 'STAFF', value: 'STAFF' }
+              { label: 'Owner', value: 'OWNER' },
+              { label: 'Manager', value: 'MANAGER' },
+              { label: 'Staff', value: 'STAFF' }
             ],
             onChange: setFilterRole
           }
@@ -129,7 +126,7 @@ export default function UserListPage() {
             <td colSpan={headers.length}>
               <div className={styles.loadingState}>
                 <div className={styles.spinner}></div>
-                <p>FETCHING_DATA...</p>
+                <p>SYNCING...</p>
               </div>
             </td>
           </tr>
@@ -161,7 +158,7 @@ export default function UserListPage() {
         ) : (
           <tr>
             <td colSpan={headers.length}>
-              <div className={styles.emptyState}>NO_RECORDS_FOUND</div>
+              <div className={styles.emptyState}>No users found</div>
             </td>
           </tr>
         )}

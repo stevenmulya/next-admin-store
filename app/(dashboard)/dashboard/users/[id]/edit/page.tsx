@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import api from '@/services/api';
 import { notifyError, notifySuccess } from '@/utils/toastHelper';
-import { UserForm } from '@/components/ui/UserForm';
+import { UserForm } from '@/components/ui/form/UserForm';
 import styles from './page.module.css';
 
 interface UserData {
@@ -20,7 +20,6 @@ export default function EditUserPage() {
   
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
-  
   const [userData, setUserData] = useState<UserData | undefined>(undefined);
 
   useEffect(() => {
@@ -36,7 +35,7 @@ export default function EditUserPage() {
           role: data.role
         });
       } catch (error) {
-        notifyError("Personnel record not found");
+        notifyError("User not found");
         router.push('/dashboard/users');
       } finally {
         setFetching(false);
@@ -53,11 +52,11 @@ export default function EditUserPage() {
       if (!payload.password) delete payload.password;
 
       await api.patch(`/users/${userId}`, payload);
-      notifySuccess("Personnel record updated");
+      notifySuccess("User updated successfully");
       router.push('/dashboard/users');
       router.refresh();
     } catch (error: any) {
-      notifyError(error.response?.data?.message || "Update failed");
+      notifyError(error.response?.data?.message || "Failed to update user");
     } finally {
       setLoading(false);
     }
@@ -67,7 +66,7 @@ export default function EditUserPage() {
     return (
       <div className={styles.loadingWrapper}>
         <div className={styles.spinner}></div>
-        <p>RETRIEVING_DATA...</p>
+        <p>Loading user data...</p>
       </div>
     );
   }
@@ -75,15 +74,15 @@ export default function EditUserPage() {
   return (
     <div className={`${styles.wrapper} reveal-line`}>
       <div className={styles.header}>
-        <h1 className={styles.title}>Update Personnel</h1>
-        <p className={styles.subtitle}>Modify existing user credentials and access levels.</p>
+        <h1 className={styles.title}>Edit User</h1>
+        <p className={styles.subtitle}>Update account details and change user permissions.</p>
       </div>
       
       <UserForm 
         initialData={userData}
         onSubmit={handleSubmit} 
         loading={loading} 
-        submitLabel="Save Changes" 
+        submitLabel="Update Account" 
         onCancel={() => router.back()} 
       />
     </div>

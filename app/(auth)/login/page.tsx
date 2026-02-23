@@ -15,11 +15,11 @@ export default function LoginPage() {
   const validateForm = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!formData.email || !emailRegex.test(formData.email)) {
-      notifyError("Invalid email address");
+      notifyError("Please enter a valid email address");
       return false;
     }
     if (formData.password.length < 8) {
-      notifyError("Password minimum 8 characters");
+      notifyError("Password must be at least 8 characters");
       return false;
     }
     return true;
@@ -45,7 +45,7 @@ export default function LoginPage() {
 
       notifySuccess('Login successful');
     } catch (error: any) {
-      notifyError(error);
+      notifyError(error.response?.data?.message || "Login failed");
     } finally {
       setIsLoading(false);
     }
@@ -55,17 +55,17 @@ export default function LoginPage() {
     <div className={styles.container}>
       <div className={`${styles.card} reveal-line delay-1`}>
         <div className={styles.header}>
-          <h1 className={`${styles.title} reveal-line delay-2`}>Login</h1>
-          <p className={`${styles.subtitle} reveal-line delay-3`}>Admin Portal Access</p>
+          <h1 className={`${styles.title} reveal-line delay-2`}>Sign In</h1>
+          <p className={`${styles.subtitle} reveal-line delay-3`}>Enter your details to access your account.</p>
         </div>
 
         <form onSubmit={handleSubmit} noValidate>
           <div className={`${styles.formGroup} reveal-line delay-3`}>
-            <label className={styles.label}>Email</label>
+            <label className={styles.label}>Email Address</label>
             <input
               className={styles.input}
               type="email"
-              placeholder="Email Address"
+              placeholder="username@email.com"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               required
@@ -78,7 +78,7 @@ export default function LoginPage() {
               <input
                 className={styles.passwordInput}
                 type={showPassword ? "text" : "password"}
-                placeholder="Password"
+                placeholder="••••••••"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 required
@@ -94,14 +94,21 @@ export default function LoginPage() {
           </div>
 
           <button type="submit" className={`${styles.submitBtn} reveal-line delay-5`} disabled={isLoading}>
-            {isLoading ? 'Verifying' : 'Sign In'}
+            {isLoading ? 'Processing...' : 'Sign In'}
           </button>
         </form>
 
         <div className={`${styles.footer} reveal-line delay-5`}>
           <div className={styles.linkGroup}>
-            <a href="#" className={styles.footerLink}>Forgot Password?</a>
-            <a href="https://wa.me/6287773298907" target="_blank" className={styles.footerLink}>Contact Support</a>
+            <span className={styles.footerText}>Unable to access your account?</span>
+            <a 
+              href="https://wa.me/6287773298907" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className={styles.footerLink}
+            >
+              Contact Us
+            </a>
           </div>
         </div>
       </div>

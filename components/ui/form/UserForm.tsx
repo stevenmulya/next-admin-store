@@ -45,14 +45,14 @@ export function UserForm({ initialData, onSubmit, loading, submitLabel, onCancel
         <div className={styles.field}>
           <div className={styles.labelBlock}>
             <label className={styles.label}>Full Name</label>
-            <span className={styles.helper}>Official name for system identification.</span>
+            <span className={styles.helper}>Enter the user's display name.</span>
           </div>
           <input
             type="text"
             name="name"
             required
             className={styles.input}
-            placeholder="e.g. Steven Mulya"
+            placeholder="e.g. John Doe"
             value={formData.name}
             onChange={handleChange}
           />
@@ -61,14 +61,14 @@ export function UserForm({ initialData, onSubmit, loading, submitLabel, onCancel
         <div className={styles.field}>
           <div className={styles.labelBlock}>
             <label className={styles.label}>Email Address</label>
-            <span className={styles.helper}>Primary identifier for login and security.</span>
+            <span className={styles.helper}>This will be used as the username for login.</span>
           </div>
           <input
             type="email"
             name="email"
             required
             className={styles.input}
-            placeholder="example@mulatama.com"
+            placeholder="username@company.com"
             value={formData.email}
             onChange={handleChange}
           />
@@ -77,8 +77,8 @@ export function UserForm({ initialData, onSubmit, loading, submitLabel, onCancel
         <div className={styles.row}>
           <div className={styles.field}>
             <div className={styles.labelBlock}>
-              <label className={styles.label}>Security Key</label>
-              <span className={styles.helper}>{initialData ? 'Leave blank to keep current' : 'Min. 8 characters required.'}</span>
+              <label className={styles.label}>Password</label>
+              <span className={styles.helper}>{initialData ? 'Leave blank to keep the current password' : 'Use at least 8 characters.'}</span>
             </div>
             <input
               type="password"
@@ -93,8 +93,8 @@ export function UserForm({ initialData, onSubmit, loading, submitLabel, onCancel
 
           <div className={styles.field}>
             <div className={styles.labelBlock}>
-              <label className={styles.label}>Access Level</label>
-              <span className={styles.helper}>Define user privilege permissions.</span>
+              <label className={styles.label}>Account Role</label>
+              <span className={styles.helper}>Set the access level for this account.</span>
             </div>
             <select
               name="role"
@@ -102,9 +102,9 @@ export function UserForm({ initialData, onSubmit, loading, submitLabel, onCancel
               value={formData.role}
               onChange={handleChange}
             >
-              <option value="STAFF">Staff Personnel</option>
-              <option value="MANAGER">Operational Manager</option>
-              <option value="OWNER">System Owner</option>
+              <option value="STAFF">Staff</option>
+              <option value="MANAGER">Manager</option>
+              <option value="OWNER">Owner</option>
             </select>
           </div>
         </div>
@@ -115,7 +115,7 @@ export function UserForm({ initialData, onSubmit, loading, submitLabel, onCancel
           Cancel
         </button>
         <button type="submit" disabled={loading} className={styles.submitBtn}>
-          {loading ? 'Processing...' : submitLabel}
+          {loading ? 'Saving...' : submitLabel}
         </button>
       </div>
     </form>

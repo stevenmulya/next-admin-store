@@ -1,0 +1,91 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  max-width: 800px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.labelBlock {
+  display: flex;
+  flex-direction: column;
+}
+
+.label {
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.helper {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+.input, .select {
+  width: 100%;
+  height: 40px;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  font-size: var(--font-sm);
+  padding: 0 12px;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.input:focus, .select:focus {
+  border-color: var(--text-main);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-start;
+  gap: 12px;
+  padding-top: 32px;
+  border-top: 1px solid var(--border-color);
+}
+
+.cancelBtn {
+  height: 36px;
+  padding: 0 16px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  font-size: var(--font-sm);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.submitBtn {
+  height: 36px;
+  padding: 0 20px;
+  background-color: var(--bg-active);
+  color: var(--text-on-active);
+  border: none;
+  font-size: var(--font-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.submitBtn:disabled {
+  opacity: 0.5;
+}

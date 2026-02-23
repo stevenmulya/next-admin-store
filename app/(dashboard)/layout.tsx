@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from 'next-themes';
-import { Sun, Moon, ChevronLeft, ChevronRight, Plus, Minus } from 'lucide-react';
+import { Sun, Moon, ChevronLeft, ChevronRight, Info } from 'lucide-react';
 import styles from './layout.module.css';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -13,25 +13,30 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { logout, user } = useAuth();
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const [expandedMenu, setExpandedMenu] = useState<string | null>(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [currentTime, setCurrentTime] = useState('');
+  const [currentDateTime, setCurrentDateTime] = useState({ time: '', date: '' });
 
   const navigation = [
-    { name: 'Dashboard', href: '/dashboard' },
     { 
-      name: 'Inventory', 
+      name: 'Dashboard', 
+      href: '/dashboard', 
+      access: 'All can access' 
+    },
+    { 
+      name: 'Items', 
       href: '/dashboard/items', 
-      children: [
-        { name: 'Stock List', href: '/dashboard/items' },
-        { name: 'Categories', href: '/dashboard/categories' },
-      ]
+      access: 'All can access' 
+    },
+    { 
+      name: 'Categories', 
+      href: '/dashboard/categories', 
+      access: 'All can access' 
     },
     ...(user?.level?.toString().toUpperCase() === 'OWNER' ? [{
       name: 'Admin',
-      href: '/dashboard/users'
+      href: '/dashboard/users',
+      access: 'Only Owner can access'
     }] : []),
-    { name: 'Settings', href: '/dashboard/settings' },
   ];
 
   useEffect(() => { setMounted(true); }, []);
@@ -39,10 +44,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
-      setCurrentTime(new Intl.DateTimeFormat('id-ID', {
+      const timeStr = new Intl.DateTimeFormat('en-US', {
         hour: '2-digit', minute: '2-digit', second: '2-digit',
         timeZone: 'Asia/Jakarta', hour12: false
-      }).format(now) + ' WIB');
+      }).format(now);
+
+      const dateStr = new Intl.DateTimeFormat('en-US', {
+        day: '2-digit', month: 'short', year: 'numeric',
+        timeZone: 'Asia/Jakarta'
+      }).format(now);
+
+      setCurrentDateTime({ time: timeStr, date: dateStr.toUpperCase() });
     };
     updateTime();
     const interval = setInterval(updateTime, 1000);
@@ -50,9 +62,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, []);
 
   const getActivePageName = () => {
-    const activeItem = navigation.find(item => 
-      pathname === item.href || item.children?.some(c => pathname === c.href)
-    );
+    const activeItem = navigation.find(item => pathname === item.href);
     return activeItem ? activeItem.name : 'Portal';
   };
 
@@ -63,62 +73,70 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div className={styles.container} data-theme={currentT}>
       <aside className={styles.sidebar} data-collapsed={isCollapsed}>
         <div className={styles.expandedContent}>
-          <div className={styles.brand}>
+          <div className={`${styles.brand} reveal-line`}>
             <span className={styles.brandText}>Admin Panel</span>
             <button onClick={() => setIsCollapsed(true)} className={styles.toggleBtn}>
-              <ChevronLeft size={16} strokeWidth={2.5} />
+              <ChevronLeft size={14} />
             </button>
           </div>
 
           <nav className={styles.nav}>
-            {navigation.map((item, idx) => {
-              const hasChildren = !!item.children;
-              const isOpen = expandedMenu === item.href;
-              const isActive = pathname === item.href || item.children?.some(c => pathname === c.href);
-
-              return (
-                <div key={item.name} className="reveal-line" style={{ animationDelay: `${idx * 0.05}s` }}>
-                  {hasChildren ? (
-                    <>
-                      <button 
-                        onClick={() => setExpandedMenu(isOpen ? null : item.href)} 
-                        className={`${styles.navItemButton} ${isActive && !isOpen ? styles.active : ''}`}
-                      >
-                        <span>{item.name}</span>
-                        {isOpen ? <Minus size={12} strokeWidth={2.5} /> : <Plus size={12} strokeWidth={2.5} />}
-                      </button>
-                      {isOpen && (
-                        <div className={styles.subMenu}>
-                          {item.children?.map(child => (
-                            <Link 
-                              key={child.name} 
-                              href={child.href} 
-                              className={`${styles.subNavItem} ${pathname === child.href ? styles.subActive : ''}`}
-                            >
-                              {child.name}
-                            </Link>
-                          ))}
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <Link href={item.href} className={`${styles.navItemLink} ${pathname === item.href ? styles.active : ''}`}>
-                      {item.name}
-                    </Link>
-                  )}
-                </div>
-              );
-            })}
+            {navigation.map((item, idx) => (
+              <Link 
+                key={item.name}
+                href={item.href} 
+                className={`${styles.navItemLink} ${pathname === item.href ? styles.active : ''} reveal-line`}
+                style={{ animationDelay: `${idx * 0.05}s` }}
+              >
+                <span className={styles.navName}>{item.name}</span>
+                <span 
+                  className={styles.navAccess}
+                  style={{ animationDelay: `${(idx * 0.05) + 0.4}s` }}
+                >
+                  [{item.access}]
+                </span>
+              </Link>
+            ))}
           </nav>
 
           <div className={styles.footer}>
-            <div className={styles.userProfile}>
-              <div className={styles.userName}>{user?.name || 'User'}</div>
-              <div className={styles.userTime}>{currentTime}</div>
+            <div className={`${styles.infoBox} reveal-line`} style={{ animationDelay: '0.25s' }}>
+              <div className={styles.infoTitle}>
+                <Info size={10} />
+                <span>Audit Standard Time</span>
+              </div>
+              <p className={styles.infoDesc}>
+                All activities are logged by this time and date, under the name and role of this active session.
+              </p>
+              
+              <div className={styles.metaList}>
+                <div className={styles.metaItem}>
+                  <span className={styles.metaLabel}>Operator</span>
+                  <span className={styles.metaValue}>{user?.name || 'User'}</span>
+                </div>
+                <div className={styles.metaItem}>
+                  <span className={styles.metaLabel}>Privilege</span>
+                  <span className={styles.metaValue}>{user?.level || 'Personnel'}</span>
+                </div>
+                <div className={styles.metaItem}>
+                  <span className={styles.metaLabel}>Location</span>
+                  <span className={styles.metaValue}>Jakarta, ID</span>
+                </div>
+                <div className={styles.metaItem}>
+                  <span className={styles.metaLabel}>System Date</span>
+                  <span className={styles.metaValue}>{currentDateTime.date}</span>
+                </div>
+                <div className={styles.metaItem}>
+                  <span className={styles.metaLabel}>Clock Time</span>
+                  <span className={styles.metaValue}>{currentDateTime.time}</span>
+                </div>
+              </div>
             </div>
-            <div className={styles.actionButtons}>
-              <button onClick={() => setTheme(currentT === 'dark' ? 'light' : 'dark')} className={styles.themeBtn}>
-                {currentT === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
+
+            <div className={`${styles.actionGrid} reveal-line`} style={{ animationDelay: '0.3s' }}>
+              <button onClick={() => setTheme(currentT === 'dark' ? 'light' : 'dark')} className={styles.themeToggle}>
+                {currentT === 'dark' ? <Sun size={12} /> : <Moon size={12} />}
+                <span>{currentT === 'dark' ? 'Light' : 'Dark'}</span>
               </button>
               <button onClick={logout} className={styles.logoutBtn}>Sign Out</button>
             </div>
@@ -127,16 +145,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         <div className={styles.collapsedContent}>
           <button onClick={() => setIsCollapsed(false)} className={styles.toggleBtn}>
-            <ChevronRight size={16} strokeWidth={2.5} />
+            <ChevronRight size={14} />
           </button>
           <div className={styles.verticalLabel}>{getActivePageName()}</div>
         </div>
       </aside>
 
       <main className={styles.main}>
-        <div className="reveal-line">
-          {children}
-        </div>
+        {children}
       </main>
     </div>
   );
