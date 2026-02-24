@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import styles from './DataTable.module.css';
 
 interface DataTableProps {
-  headers: string[];
+  headers: (string | React.ReactNode)[];
   children: React.ReactNode;
   pagination?: {
     currentPage: number;

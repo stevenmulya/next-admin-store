@@ -1,111 +1,197 @@
 .wrapper {
   width: 100%;
-  min-height: calc(100vh - var(--header-height));
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
-  padding: 60px;
+  padding: 40px;
+  background-color: var(--bg-page);
+  min-height: 100vh;
+  overflow-y: auto;
 }
 
 .header {
-  margin-bottom: 48px;
+  margin-bottom: 32px;
   border-bottom: 1px solid var(--border-color);
-  padding-bottom: 24px;
+  padding-bottom: 20px;
 }
 
 .title {
-  font-size: 24px;
+  font-size: var(--font-xl);
   font-weight: 700;
   color: var(--text-main);
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
 }
 
 .subtitle {
-  font-size: 14px;
+  font-size: var(--font-sm);
   color: var(--text-muted);
   margin-top: 4px;
 }
 
-/* Base Form styles provided for consistency with User layer */
 .form {
   display: flex;
   flex-direction: column;
-  gap: 40px;
+  gap: 28px;
+  max-width: 1000px;
 }
 
 .section {
   display: flex;
   flex-direction: column;
-  gap: 32px;
-  max-width: 800px;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.labelBlock {
-  display: flex;
-  flex-direction: column;
-}
-
-.label {
-  font-size: var(--font-sm);
-  font-weight: 600;
-  color: var(--text-main);
-}
-
-.helper {
-  font-size: 11px;
-  color: var(--text-muted);
-  margin-top: 1px;
-}
-
-.input, .select {
-  width: 100%;
-  height: 40px;
-  background-color: var(--bg-input);
-  border: 1px solid var(--border-color);
-  color: var(--text-main);
-  font-size: var(--font-sm);
-  padding: 0 12px;
-  outline: none;
-  transition: all 0.2s ease;
-}
-
-.input:focus, .select:focus {
-  border-color: var(--text-main);
+  gap: 24px;
 }
 
 .row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 24px;
+  align-items: end;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.labelBlock {
+  min-height: 46px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.label {
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--text-main);
+  line-height: 1;
+}
+
+.helper {
+  font-size: var(--font-xs);
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.input, .select {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  font-size: var(--font-md);
+  outline: none;
+}
+
+.input:focus, .select:focus {
+  border-color: var(--text-main);
+}
+
+.textarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 12px;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  font-size: var(--font-md);
+  resize: vertical;
+  outline: none;
+}
+
+.checkboxGroup {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin: 8px 0;
+  padding: 16px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.checkboxInput {
+  margin-top: 3px;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--bg-active);
+}
+
+.checkboxText {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.imageSection {
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-card);
+  margin-top: 8px;
+}
+
+.dropdownHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  cursor: pointer;
+  background-color: var(--bg-hover);
+}
+
+.titleGroup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sectionTitle {
+  font-size: var(--font-sm);
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.optionalBadge {
+  font-size: 10px;
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+  padding: 1px 4px;
+  font-weight: 600;
+}
+
+.dropdownContent {
+  padding: 20px;
+  border-top: 1px solid var(--border-color);
 }
 
 .footer {
   display: flex;
-  justify-content: flex-start;
+  justify-content: flex-end;
   gap: 12px;
-  padding-top: 32px;
+  margin-top: 32px;
+  padding-top: 24px;
   border-top: 1px solid var(--border-color);
 }
 
 .cancelBtn {
-  height: 36px;
-  padding: 0 16px;
-  background: transparent;
+  height: 40px;
+  padding: 0 24px;
+  background-color: transparent;
   border: 1px solid var(--border-color);
-  color: var(--text-muted);
+  color: var(--text-main);
   font-size: var(--font-sm);
   font-weight: 500;
   cursor: pointer;
 }
 
 .submitBtn {
-  height: 36px;
-  padding: 0 20px;
+  height: 40px;
+  padding: 0 32px;
   background-color: var(--bg-active);
   color: var(--text-on-active);
   border: none;
@@ -116,4 +202,5 @@
 
 .submitBtn:disabled {
   opacity: 0.5;
+  cursor: not-allowed;
 }
