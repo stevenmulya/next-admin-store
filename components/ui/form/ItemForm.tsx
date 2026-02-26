@@ -3,6 +3,16 @@
 import React, { useState, useEffect } from 'react';
 import api from '@/services/api';
 
+export interface ItemPayload {
+  name: string;
+  slug: string;
+  categoryId: number | null;
+  status: string;
+  description: string;
+  isPinned: boolean;
+  isHighlight: boolean;
+}
+
 export interface ItemFormState {
   name: string;
   slug: string;
@@ -14,14 +24,20 @@ export interface ItemFormState {
   isHighlight: boolean;
 }
 
+export interface Category {
+  id: number;
+  name: string;
+  [key: string]: unknown;
+}
+
 interface ItemFormProps {
   initialData?: any;
-  onSubmit: (data: any) => void;
+  onSubmit: (data: ItemPayload) => void;
   loading: boolean;
   submitLabel: string;
   onCancel: () => void;
   extraContent?: React.ReactNode;
-  styles: any;
+  styles: Record<string, string>;
 }
 
 export function ItemForm({ initialData, onSubmit, loading, submitLabel, onCancel, extraContent, styles }: ItemFormProps) {
@@ -36,13 +52,13 @@ export function ItemForm({ initialData, onSubmit, loading, submitLabel, onCancel
     isHighlight: false
   });
 
-  const [categories, setCategories] = useState<any[]>([]);
-  const [subCategories, setSubCategories] = useState<any[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [subCategories, setSubCategories] = useState<Category[]>([]);
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res: any = await api.get('/item-categories?isRoot=true&limit=100');
+        const res = await api.get('/item-categories?isRoot=true&limit=100');
         const items = res?.data?.data?.items || res?.data?.items || [];
         setCategories(items);
       } catch (err) {
@@ -59,7 +75,7 @@ export function ItemForm({ initialData, onSubmit, loading, submitLabel, onCancel
         return;
       }
       try {
-        const res: any = await api.get(`/item-categories?parentId=${formData.categoryId}&limit=100`);
+        const res = await api.get(`/item-categories?parentId=${formData.categoryId}&limit=100`);
         const items = res?.data?.data?.items || res?.data?.items || [];
         setSubCategories(items);
       } catch (err) {
@@ -71,11 +87,19 @@ export function ItemForm({ initialData, onSubmit, loading, submitLabel, onCancel
 
   useEffect(() => {
     if (initialData) {
+      let mainCatId = initialData.categoryId ?? '';
+      let subCatId = '';
+
+      if (initialData.category && initialData.category.parentId) {
+        mainCatId = initialData.category.parentId;
+        subCatId = initialData.categoryId;
+      }
+
       setFormData({
         name: initialData.name || '',
         slug: initialData.slug || '',
-        categoryId: initialData.categoryId ?? '',
-        subCategoryId: '',
+        categoryId: mainCatId,
+        subCategoryId: subCatId,
         status: initialData.status || 'DRAFT',
         description: initialData.description || '',
         isPinned: initialData.isPinned ?? false,
@@ -89,7 +113,7 @@ export function ItemForm({ initialData, onSubmit, loading, submitLabel, onCancel
     const checked = type === 'checkbox' ? (e.target as HTMLInputElement).checked : undefined;
     
     setFormData(prev => {
-      const newData: any = { ...prev, [name]: type === 'checkbox' ? checked : value };
+      const newData = { ...prev, [name]: type === 'checkbox' ? checked : value };
       if (name === 'name' && !initialData) {
         newData.slug = value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
       }
@@ -98,8 +122,26 @@ export function ItemForm({ initialData, onSubmit, loading, submitLabel, onCancel
     });
   };
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const finalCategoryId = formData.subCategoryId || formData.categoryId;
+    
+    const payload: ItemPayload = {
+      name: formData.name,
+      slug: formData.slug,
+      categoryId: finalCategoryId ? Number(finalCategoryId) : null,
+      status: formData.status,
+      description: formData.description,
+      isPinned: formData.isPinned,
+      isHighlight: formData.isHighlight,
+    };
+    
+    onSubmit(payload);
+  };
+
   return (
-    <form onSubmit={(e) => { e.preventDefault(); onSubmit(formData); }} className={styles.form}>
+    <form onSubmit={handleSubmit} className={styles.form}>
       <div className={styles.section}>
         <div className={styles.row}>
           <div className={styles.field}>

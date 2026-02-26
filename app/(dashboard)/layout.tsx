@@ -16,6 +16,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [currentDateTime, setCurrentDateTime] = useState({ time: '', date: '' });
 
+  // Menggunakan 'as any' untuk mem-bypass error TypeScript saat mengecek wrapper 'data'
+  const userData = (user as any)?.data || user;
+  const userEmail = userData?.email || 'Unknown User';
+  const userRole = (userData?.role || 'PERSONNEL').toString().toUpperCase();
+
   const navigation = [
     { 
       name: 'Dashboard', 
@@ -32,7 +37,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       href: '/dashboard/categories', 
       access: 'All can access' 
     },
-    ...(user?.level?.toString().toUpperCase() === 'OWNER' ? [{
+    ...(userRole === 'OWNER' ? [{
       name: 'Admin',
       href: '/dashboard/users',
       access: 'Only Owner can access'
@@ -112,11 +117,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <div className={styles.metaList}>
                 <div className={styles.metaItem}>
                   <span className={styles.metaLabel}>Operator</span>
-                  <span className={styles.metaValue}>{user?.name || 'User'}</span>
+                  <span className={styles.metaValue}>{userEmail}</span>
                 </div>
                 <div className={styles.metaItem}>
                   <span className={styles.metaLabel}>Privilege</span>
-                  <span className={styles.metaValue}>{user?.level || 'Personnel'}</span>
+                  <span className={styles.metaValue}>{userRole}</span>
                 </div>
                 <div className={styles.metaItem}>
                   <span className={styles.metaLabel}>Location</span>

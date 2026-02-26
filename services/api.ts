@@ -1,4 +1,4 @@
-import axios, { InternalAxiosRequestConfig } from 'axios';
+import axios, { InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 import { getCookie } from 'cookies-next';
 
 const api = axios.create({
@@ -17,12 +17,20 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 });
 
 api.interceptors.response.use(
-  (response) => {
-    return response.data.data;
+  (response: AxiosResponse) => {
+    return response.data;
   },
   (error) => {
-    const message = error.response?.data?.message || error.message || 'Error';
-    return Promise.reject(String(message));
+    if (error.response && error.response.data) {
+      return Promise.reject(error.response.data);
+    }
+
+    return Promise.reject({
+      success: false,
+      statusCode: error.response?.status || 500,
+      message: error.message || 'Internal Server Error',
+      error: 'Network Error',
+    });
   }
 );
 

@@ -32,11 +32,19 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       const res: any = await api.post('/auth/login', formData);
-      const profile: any = await api.get('/users/profile', {
-        headers: { Authorization: `Bearer ${res.access_token}` }
+      const token = res?.data?.access_token || res?.access_token;
+
+      if (!token) {
+        throw new Error("Authentication failed: No token received");
+      }
+
+      const profileRes: any = await api.get('/users/profile', {
+        headers: { Authorization: `Bearer ${token}` }
       });
 
-      login(res.access_token, {
+      const profile = profileRes?.data || profileRes;
+
+      login(token, {
         id: profile.id,
         name: profile.name,
         email: profile.email,
@@ -45,7 +53,7 @@ export default function LoginPage() {
 
       notifySuccess('Login successful');
     } catch (error: any) {
-      notifyError(error.response?.data?.message || "Login failed");
+      notifyError(error);
     } finally {
       setIsLoading(false);
     }
@@ -53,14 +61,14 @@ export default function LoginPage() {
 
   return (
     <div className={styles.container}>
-      <div className={`${styles.card} reveal-line delay-1`}>
+      <div className={`${styles.card} reveal-line`}>
         <div className={styles.header}>
-          <h1 className={`${styles.title} reveal-line delay-2`}>Sign In</h1>
-          <p className={`${styles.subtitle} reveal-line delay-3`}>Enter your details to access your account.</p>
+          <h1 className={styles.title}>Sign In</h1>
+          <p className={styles.subtitle}>Enter your details to access your account.</p>
         </div>
 
         <form onSubmit={handleSubmit} noValidate>
-          <div className={`${styles.formGroup} reveal-line delay-3`}>
+          <div className={styles.formGroup}>
             <label className={styles.label}>Email Address</label>
             <input
               className={styles.input}
@@ -72,7 +80,7 @@ export default function LoginPage() {
             />
           </div>
 
-          <div className={`${styles.formGroup} reveal-line delay-4`}>
+          <div className={styles.formGroup}>
             <label className={styles.label}>Password</label>
             <div className={styles.passwordWrapper}>
               <input
@@ -93,12 +101,12 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <button type="submit" className={`${styles.submitBtn} reveal-line delay-5`} disabled={isLoading}>
+          <button type="submit" className={styles.submitBtn} disabled={isLoading}>
             {isLoading ? 'Processing...' : 'Sign In'}
           </button>
         </form>
 
-        <div className={`${styles.footer} reveal-line delay-5`}>
+        <div className={styles.footer}>
           <div className={styles.linkGroup}>
             <span className={styles.footerText}>Unable to access your account?</span>
             <a 

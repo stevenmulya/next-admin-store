@@ -4,7 +4,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/services/api';
 import { notifyError, notifySuccess } from '@/utils/toastHelper';
-import { Edit2, Trash2, Plus } from 'lucide-react';
+import { Edit2, Trash2 } from 'lucide-react';
 import { DataTable } from '@/components/ui/DataTable';
 import { Toolbar } from '@/components/ui/Toolbar';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -24,6 +24,7 @@ export default function CategoryListPage() {
         params: {
           page: pageNumber,
           search: searchQuery || undefined,
+          isRoot: true // Menambahkan filter untuk hanya menampilkan parent category
         }
       });
       
@@ -60,19 +61,19 @@ export default function CategoryListPage() {
     }
   };
 
-  const headers = ['NAME', 'TYPE', 'PARENT', 'SLUG', 'ACTION'];
+  const headers = ['NAME', 'DATE', 'SUBCATEGORIES', 'ATTRIBUTES', 'ACTION'];
 
   return (
     <div className="reveal-line">
       <PageHeader 
         title="Item Categories"
-        description="Manage your item categories and subcategories in a flat list view."
+        description="Manage your primary categories. Subcategories can be managed inside each category's edit page."
         actionLabel="Add Category"
         onAction={() => router.push('/dashboard/categories/add')}
       />
 
       <Toolbar 
-        searchPlaceholder="Search categories..."
+        searchPlaceholder="Search primary categories..."
         searchValue={searchQuery}
         onSearchChange={setSearchQuery}
       />
@@ -88,45 +89,39 @@ export default function CategoryListPage() {
         {loading ? (
           <tr>
             <td colSpan={headers.length}>
-              <div className={styles.loadingState}><div className={styles.spinner}></div><p>SYNCING DATA...</p></div>
+              <div className={styles.loadingState}>
+                <div className={styles.spinner}></div>
+                <p>SYNCING DATA...</p>
+              </div>
             </td>
           </tr>
         ) : categories.length > 0 ? (
           categories.map((cat: any) => {
-            const isSubcategory = !!cat.parentId;
+            const dateStr = cat.createdAt ? new Date(cat.createdAt).toLocaleDateString('en-GB') : '—';
+            const subCount = cat.children?.length || 0;
+            const attributeKeys = cat.attributes?.map((a: any) => a.key).join(', ') || '—';
 
             return (
               <tr key={cat.id}>
                 <td className={styles.bold}>
                   {cat.name}
                 </td>
-                <td>
-                   <span className={isSubcategory ? styles.subBadge : styles.rootBadge}>
-                     {isSubcategory ? 'SUBCATEGORY' : 'CATEGORY'}
-                   </span>
+                <td className={styles.date}>
+                  {dateStr}
                 </td>
                 <td>
-                  {cat.parent?.name || <span className={styles.dimmed}>—</span>}
+                  <span className={subCount > 0 ? styles.countBadge : styles.dimmed}>
+                    {subCount} {subCount === 1 ? 'subcategory' : 'subcategories'}
+                  </span>
                 </td>
-                <td className={styles.mono}>{cat.slug}</td>
+                <td className={styles.attrCell}>
+                  {attributeKeys}
+                </td>
                 <td className={styles.actionColumn}>
                   <div className={styles.actionGroup}>
-                    {!isSubcategory && (
-                      <button 
-                        className={styles.actionBtn} 
-                        onClick={() => router.push(`/dashboard/categories/sub/add?parentId=${cat.id}`)}
-                      >
-                        <Plus size={14} />
-                      </button>
-                    )}
                     <button 
                       className={styles.actionBtn} 
-                      onClick={() => {
-                        const editPath = isSubcategory 
-                          ? `/dashboard/categories/sub/${cat.id}/edit`
-                          : `/dashboard/categories/${cat.id}/edit`;
-                        router.push(editPath);
-                      }}
+                      onClick={() => router.push(`/dashboard/categories/${cat.id}/edit`)}
                     >
                       <Edit2 size={14} />
                     </button>
@@ -144,7 +139,7 @@ export default function CategoryListPage() {
         ) : (
           <tr>
             <td colSpan={headers.length}>
-              <div className={styles.emptyState}>No categories found</div>
+              <div className={styles.emptyState}>No primary categories found</div>
             </td>
           </tr>
         )}

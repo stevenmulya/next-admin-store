@@ -4,7 +4,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/services/api';
 import { notifyError, notifySuccess } from '@/utils/toastHelper';
-import { Edit2, Trash2, Eye, ArrowUp, ArrowDown, Pin, Star } from 'lucide-react';
+import { Edit2, Trash2, ArrowUp, ArrowDown, Pin, Star, PinOff, StarOff } from 'lucide-react';
 import { DataTable } from '@/components/ui/DataTable';
 import { Toolbar } from '@/components/ui/Toolbar';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -18,9 +18,9 @@ export default function ItemListPage() {
   const [loading, setLoading] = useState(true);
   
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterStatus, setFilterStatus] = useState('ALL');
-  const [filterCategory, setFilterCategory] = useState('ALL');
-  const [filterSubCategory, setFilterSubCategory] = useState('ALL');
+  const [filterStatus, setFilterStatus] = useState('');
+  const [filterCategory, setFilterCategory] = useState('');
+  const [filterSubCategory, setFilterSubCategory] = useState('');
   const [sortOrder, setSortOrder] = useState<'DESC' | 'ASC'>('DESC');
   
   const [pagination, setPagination] = useState({ page: 1, lastPage: 1, total: 0 });
@@ -42,32 +42,24 @@ export default function ItemListPage() {
   const fetchItems = useCallback(async (pageNumber = 1) => {
     try {
       setLoading(true);
-      const effectiveCategoryId = filterSubCategory !== 'ALL' 
+      const effectiveCategoryId = filterSubCategory !== '' 
         ? filterSubCategory 
-        : (filterCategory !== 'ALL' ? filterCategory : undefined);
+        : (filterCategory !== '' ? filterCategory : undefined);
 
       const res: any = await api.get('/items', {
         params: {
           page: pageNumber,
           search: searchQuery || undefined,
-          status: filterStatus === 'ALL' ? undefined : filterStatus,
-          categoryId: effectiveCategoryId
+          status: filterStatus === '' ? undefined : filterStatus,
+          categoryId: effectiveCategoryId,
+          sortBy: 'createdAt',
+          sortOrder: sortOrder
         }
       });
       
       const responseData = res?.data?.data || res?.data || res;
-      let fetchedItems = responseData.items || [];
-
-      const sortedItems = [...fetchedItems].sort((a: any, b: any) => {
-        if (a.isPinned && !b.isPinned) return -1;
-        if (!a.isPinned && b.isPinned) return 1;
-
-        const dateA = new Date(a.createdAt).getTime();
-        const dateB = new Date(b.createdAt).getTime();
-        return sortOrder === 'DESC' ? dateB - dateA : dateA - dateB;
-      });
-
-      setItems(sortedItems);
+      
+      setItems(responseData.items || []);
       setPagination({
         page: responseData.meta?.page || 1,
         lastPage: responseData.meta?.lastPage || 1,
@@ -93,7 +85,7 @@ export default function ItemListPage() {
 
   const handleCategoryChange = (val: string) => {
     setFilterCategory(val);
-    setFilterSubCategory('ALL');
+    setFilterSubCategory('');
   };
 
   const toggleSort = () => {
@@ -101,7 +93,7 @@ export default function ItemListPage() {
   };
 
   const filteredSubOptions = subCategories.filter(sub => 
-    filterCategory === 'ALL' ? true : sub.parentId === Number(filterCategory)
+    filterCategory === '' ? true : sub.parentId === Number(filterCategory)
   );
 
   const handleDelete = async (id: number, name: string) => {
@@ -116,11 +108,31 @@ export default function ItemListPage() {
     }
   };
 
+  const handleTogglePin = async (id: number, currentPinnedStatus: boolean, name: string) => {
+    try {
+      await api.patch(`/items/${id}`, { isPinned: !currentPinnedStatus });
+      notifySuccess(`Item ${name.toUpperCase()} ${currentPinnedStatus ? 'unpinned' : 'pinned'}`);
+      fetchItems(pagination.page);
+    } catch (error) {
+      notifyError("Failed to update pin status");
+    }
+  };
+
+  const handleToggleHighlight = async (id: number, currentHighlightStatus: boolean, name: string) => {
+    try {
+      await api.patch(`/items/${id}`, { isHighlight: !currentHighlightStatus });
+      notifySuccess(`Item ${name.toUpperCase()} ${currentHighlightStatus ? 'unhighlighted' : 'highlighted'}`);
+      fetchItems(pagination.page);
+    } catch (error) {
+      notifyError("Failed to update highlight status");
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch(status) {
-      case 'PUBLISHED': return styles.statusSuccess;
-      case 'DRAFT': return styles.statusWarning;
-      case 'ARCHIVED': return styles.statusDanger;
+      case 'PUBLISHED': return styles.statusPublished;
+      case 'DRAFT': return styles.statusDraft;
+      case 'ARCHIVED': return styles.statusArchived;
       default: return '';
     }
   };
@@ -155,33 +167,26 @@ export default function ItemListPage() {
       />
 
       <Toolbar 
-        searchPlaceholder="Search item registry..."
+        searchPlaceholder="Search items by name or slug..."
         searchValue={searchQuery}
         onSearchChange={setSearchQuery}
         filters={[
           {
-            label: 'Category',
+            label: 'All Categories',
             value: filterCategory,
-            options: [
-              { label: 'All Categories', value: 'ALL' },
-              ...categories.map(cat => ({ label: cat.name, value: cat.id.toString() }))
-            ],
+            options: categories.map(cat => ({ label: cat.name, value: cat.id.toString() })),
             onChange: handleCategoryChange
           },
           {
-            label: 'Subcategory',
+            label: 'All Subcategories',
             value: filterSubCategory,
-            options: [
-              { label: 'All Subcategories', value: 'ALL' },
-              ...filteredSubOptions.map(sub => ({ label: sub.name, value: sub.id.toString() }))
-            ],
+            options: filteredSubOptions.map(sub => ({ label: sub.name, value: sub.id.toString() })),
             onChange: setFilterSubCategory
           },
           {
-            label: 'Status',
+            label: 'All Status',
             value: filterStatus,
             options: [
-              { label: 'All Status', value: 'ALL' },
               { label: 'Published', value: 'PUBLISHED' },
               { label: 'Draft', value: 'DRAFT' },
               { label: 'Archived', value: 'ARCHIVED' }
@@ -238,8 +243,19 @@ export default function ItemListPage() {
               </td>
               <td className={styles.actionColumn}>
                 <div className={styles.actionGroup}>
-                  <button className={styles.actionBtn} onClick={() => router.push(`/dashboard/items/${item.id}`)} title="View Details">
-                    <Eye size={14} />
+                  <button 
+                    className={styles.actionBtn} 
+                    onClick={() => handleToggleHighlight(item.id, item.isHighlight, item.name)} 
+                    title={item.isHighlight ? "Unhighlight Record" : "Highlight Record"}
+                  >
+                    {item.isHighlight ? <StarOff size={14} /> : <Star size={14} />}
+                  </button>
+                  <button 
+                    className={styles.actionBtn} 
+                    onClick={() => handleTogglePin(item.id, item.isPinned, item.name)} 
+                    title={item.isPinned ? "Unpin Record" : "Pin Record"}
+                  >
+                    {item.isPinned ? <PinOff size={14} /> : <Pin size={14} />}
                   </button>
                   <button className={styles.actionBtn} onClick={() => router.push(`/dashboard/items/${item.id}/edit`)} title="Edit Record">
                     <Edit2 size={14} />

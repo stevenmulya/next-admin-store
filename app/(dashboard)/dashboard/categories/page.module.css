@@ -1,40 +1,40 @@
-.mono { 
-  opacity: 0.5; 
-  font-family: monospace; 
-  font-size: var(--font-xs);
-}
-
 .bold { 
   font-weight: 700; 
   color: var(--text-main);
+  font-family: 'Inter', sans-serif;
 }
 
-.rootBadge {
-  font-size: 9px;
+.date {
+  font-family: 'Inter', sans-serif;
+  font-size: var(--font-sm);
+  color: var(--text-muted);
+}
+
+.countBadge {
+  font-size: 10px;
   padding: 2px 8px;
   background-color: var(--bg-hover);
   border: 1px solid var(--border-color);
-  color: var(--text-muted);
+  color: var(--text-main);
   font-weight: 700;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
+  display: inline-block;
 }
 
-.subBadge {
-  font-size: 9px;
-  padding: 2px 8px;
-  background-color: transparent;
-  border: 1px solid var(--border-color);
+.attrCell {
+  font-size: var(--font-sm);
   color: var(--text-muted);
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  max-width: 250px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .dimmed {
   opacity: 0.5;
-  font-style: italic;
   font-size: var(--font-xs);
+  font-family: 'Inter', sans-serif;
 }
 
 .actionColumn {
@@ -82,6 +82,7 @@
   font-size: var(--font-xs);
   font-weight: 600;
   letter-spacing: 0.1em;
+  font-family: 'Inter', sans-serif;
 }
 
 .spinner {

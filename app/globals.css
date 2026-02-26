@@ -5,7 +5,6 @@
 @tailwind utilities;
 
 :root {
-  /* Core Colors */
   --bg-page: #f8fafc;
   --bg-card: #ffffff;
   --bg-input: #ffffff;
@@ -17,19 +16,31 @@
   --border-color: #e2e8f0;
   --placeholder: #94a3b8;
 
-  /* Semantic Colors */
   --success: #10b981;
   --danger: #ef4444;
   --danger-bg: #fef2f2;
 
-  /* Typography */
+  --status-published-bg: #dcfce7;
+  --status-published-text: #166534;
+  
+  --status-draft-bg: #f3f4f6;
+  --status-draft-text: #374151;
+  
+  --status-archived-bg: #fee2e2;
+  --status-archived-text: #991b1b;
+
+  --badge-pin-bg: #e0e7ff;
+  --badge-pin-text: #3730a3;
+
+  --badge-highlight-bg: #fef9c3;
+  --badge-highlight-text: #854d0e;
+
   --font-xs: 12px;
   --font-sm: 13px;
   --font-md: 14px;
   --font-lg: 16px;
   --font-xl: 20px;
 
-  /* Layout */
   --header-height: 64px;
   --sidebar-width: 240px;
   --sidebar-collapsed: 60px;
@@ -50,6 +61,21 @@
   --success: #34d399;
   --danger: #f87171;
   --danger-bg: #450a0a;
+
+  --status-published-bg: rgba(16, 185, 129, 0.15);
+  --status-published-text: #34d399;
+  
+  --status-draft-bg: rgba(161, 161, 170, 0.15);
+  --status-draft-text: #a1a1aa;
+  
+  --status-archived-bg: rgba(239, 68, 68, 0.15);
+  --status-archived-text: #f87171;
+
+  --badge-pin-bg: rgba(99, 102, 241, 0.15);
+  --badge-pin-text: #818cf8;
+
+  --badge-highlight-bg: rgba(234, 179, 8, 0.15);
+  --badge-highlight-text: #facc15;
 }
 
 * {

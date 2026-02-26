@@ -150,6 +150,10 @@
   gap: 10px;
 }
 
+.icon {
+  color: var(--text-muted);
+}
+
 .sectionTitle {
   font-size: var(--font-sm);
   font-weight: 700;
@@ -203,4 +207,16 @@
 .submitBtn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .row {
+    grid-template-columns: 1fr;
+  }
+  .checkboxGroup {
+    grid-template-columns: 1fr;
+  }
+  .wrapper {
+    padding: 20px;
+  }
 }

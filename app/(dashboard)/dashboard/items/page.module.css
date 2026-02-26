@@ -17,33 +17,48 @@
 }
 
 .pinIcon {
-  color: var(--text-main);
-  fill: var(--text-main);
+  color: var(--badge-pin-text);
+  fill: currentColor;
 }
 
 .highlightIcon {
-  color: var(--text-main);
-  fill: var(--text-main);
+  color: var(--badge-highlight-text);
+  fill: currentColor;
 }
 
-/* Menggunakan warna active dengan opasitas rendah agar otomatis mengikuti tema */
 .pinnedRow {
-  background-color: color-mix(in srgb, var(--bg-active), transparent 92%);
+  background-color: color-mix(in srgb, var(--badge-pin-bg), transparent 50%);
 }
 
 .pinnedRow:hover {
-  background-color: color-mix(in srgb, var(--bg-active), transparent 88%);
+  background-color: var(--badge-pin-bg);
 }
 
 .tag {
-  padding: 3px 10px;
-  border: 1px solid var(--border-color);
+  padding: 4px 10px;
   font-size: var(--font-xs);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--text-muted);
-  background-color: var(--bg-page);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px !important;
+}
+
+.statusPublished { 
+  background-color: var(--status-published-bg);
+  color: var(--status-published-text);
+}
+
+.statusDraft { 
+  background-color: var(--status-draft-bg);
+  color: var(--status-draft-text);
+}
+
+.statusArchived { 
+  background-color: var(--status-archived-bg);
+  color: var(--status-archived-text);
 }
 
 .actionColumn {
@@ -163,20 +178,4 @@
   font-size: var(--font-xs);
   font-weight: 800;
   letter-spacing: 0.05em;
-}
-
-/* Status Colors menggunakan variabel global */
-.statusSuccess { 
-  border-color: var(--success); 
-  color: var(--success); 
-}
-
-.statusWarning { 
-  border-color: var(--placeholder); 
-  color: var(--text-muted); 
-}
-
-.statusDanger { 
-  border-color: var(--danger); 
-  color: var(--danger); 
 }

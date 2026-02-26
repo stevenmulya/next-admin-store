@@ -7,9 +7,10 @@ import api from '@/services/api';
 
 export interface User {
   id: number;
-  name: string;
   email: string;
-  level: string | number;
+  name?: string;
+  role?: string;
+  level?: string | number;
 }
 
 interface AuthContextType {
@@ -34,12 +35,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
       try {
-        const userData: any = await api.get('/users/profile');
+        const res: any = await api.get('/users/profile');
+        const userData = res?.data?.data || res?.data || res;
+        
         setUser({
           id: userData.id,
-          name: userData.name,
           email: userData.email,
-          level: userData.role || userData.level,
+          name: userData.name || '',
+          role: userData.role || userData.level,
+          level: userData.level || userData.role,
         });
       } catch (error) {
         deleteCookie('token', { path: '/' });
@@ -51,14 +55,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     checkUser();
   }, []);
 
-  const login = (token: string, userData: User) => {
+  const login = (token: string, userData: any) => {
     setCookie('token', token, {
       maxAge: 30 * 24 * 60 * 60,
       path: '/',
       sameSite: 'lax',
       secure: process.env.NODE_ENV === 'production',
     });
-    setUser(userData);
+    
+    const normalizedUser: User = {
+      id: userData.id,
+      email: userData.email,
+      name: userData.name || '',
+      role: userData.role || userData.level,
+      level: userData.level || userData.role,
+    };
+    
+    setUser(normalizedUser);
     router.replace('/dashboard');
   };
 
