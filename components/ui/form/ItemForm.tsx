@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import api from '@/services/api';
 
 export interface ItemPayload {
@@ -11,6 +11,7 @@ export interface ItemPayload {
   description: string;
   isPinned: boolean;
   isHighlight: boolean;
+  attributes: { categoryAttributeId: number; value: string }[];
 }
 
 export interface ItemFormState {
@@ -24,9 +25,15 @@ export interface ItemFormState {
   isHighlight: boolean;
 }
 
+export interface CategoryAttribute {
+  id: number;
+  key: string;
+}
+
 export interface Category {
   id: number;
   name: string;
+  attributes?: CategoryAttribute[];
   [key: string]: unknown;
 }
 
@@ -54,6 +61,7 @@ export function ItemForm({ initialData, onSubmit, loading, submitLabel, onCancel
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [subCategories, setSubCategories] = useState<Category[]>([]);
+  const [attributeValues, setAttributeValues] = useState<Record<number, string>>({});
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -105,8 +113,34 @@ export function ItemForm({ initialData, onSubmit, loading, submitLabel, onCancel
         isPinned: initialData.isPinned ?? false,
         isHighlight: initialData.isHighlight ?? false,
       });
+
+      if (initialData.attributes) {
+        const initialAttrs: Record<number, string> = {};
+        initialData.attributes.forEach((attr: any) => {
+          if (attr.categoryAttributeId) {
+            initialAttrs[attr.categoryAttributeId] = attr.value;
+          }
+        });
+        setAttributeValues(initialAttrs);
+      }
     }
   }, [initialData]);
+
+  const activeAttributes = useMemo(() => {
+    const activeMainCat = categories.find(c => c.id === Number(formData.categoryId));
+    const activeSubCat = subCategories.find(c => c.id === Number(formData.subCategoryId));
+    
+    const attrMap = new Map<number, CategoryAttribute>();
+    
+    if (activeMainCat?.attributes) {
+      activeMainCat.attributes.forEach((attr) => attrMap.set(attr.id, attr));
+    }
+    if (activeSubCat?.attributes) {
+      activeSubCat.attributes.forEach((attr) => attrMap.set(attr.id, attr));
+    }
+    
+    return Array.from(attrMap.values());
+  }, [categories, subCategories, formData.categoryId, formData.subCategoryId]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -122,11 +156,22 @@ export function ItemForm({ initialData, onSubmit, loading, submitLabel, onCancel
     });
   };
 
+  const handleAttributeChange = (id: number, value: string) => {
+    setAttributeValues(prev => ({ ...prev, [id]: value }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     const finalCategoryId = formData.subCategoryId || formData.categoryId;
     
+    const formattedAttributes = Object.entries(attributeValues)
+      .filter(([_, val]) => val.trim() !== "")
+      .map(([id, val]) => ({
+        categoryAttributeId: Number(id),
+        value: val
+      }));
+
     const payload: ItemPayload = {
       name: formData.name,
       slug: formData.slug,
@@ -135,6 +180,7 @@ export function ItemForm({ initialData, onSubmit, loading, submitLabel, onCancel
       description: formData.description,
       isPinned: formData.isPinned,
       isHighlight: formData.isHighlight,
+      attributes: formattedAttributes,
     };
     
     onSubmit(payload);
@@ -183,7 +229,34 @@ export function ItemForm({ initialData, onSubmit, loading, submitLabel, onCancel
           </div>
         </div>
 
-        <div className={styles.row}>
+        {activeAttributes.length > 0 && (
+          <div className={styles.row} style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px dashed var(--border-color)' }}>
+            <div className={styles.field} style={{ width: '100%' }}>
+              <div className={styles.labelBlock}>
+                <label className={styles.label}>Category Attributes</label>
+                <span className={styles.helper}>Fill in the required category attributes.</span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '16px', marginTop: '12px' }}>
+                {activeAttributes.map(attr => (
+                  <div key={attr.id} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-main)' }}>
+                      {attr.key}
+                    </label>
+                    <input
+                      type="text"
+                      className={styles.input}
+                      placeholder={`Enter ${attr.key}...`}
+                      value={attributeValues[attr.id] || ''}
+                      onChange={(e) => handleAttributeChange(attr.id, e.target.value)}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className={styles.row} style={{ marginTop: '16px' }}>
           <div className={styles.field}>
             <div className={styles.labelBlock}>
               <label className={styles.label}>Publish Status</label>

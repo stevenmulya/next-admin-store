@@ -34,7 +34,6 @@ export default function AddItemPage() {
   const [videos, setVideos] = useState<VideoUpload[]>([]);
   const [variants, setVariants] = useState<ItemVariantPayload[]>([]);
   const [priceData, setPriceData] = useState<PriceData | null>(null);
-  const [createdItemId, setCreatedItemId] = useState<number | null>(null);
 
   const [showImageUpload, setShowImageUpload] = useState<boolean>(false);
   const [showVideoUpload, setShowVideoUpload] = useState<boolean>(false);
@@ -44,57 +43,43 @@ export default function AddItemPage() {
   const handleSubmit = async (itemPayload: ItemPayload) => {
     try {
       setLoading(true);
-      let currentId = createdItemId;
 
-      if (!currentId) {
-        const res = await api.post('/items', {
-          ...itemPayload,
-          basePrice: priceData?.basePrice || 0,
-          currency: priceData?.currency || 'USD'
-        });
-        currentId = res.data?.id || res.data?.data?.id || (res as any).id;
-        setCreatedItemId(currentId!);
-      }
+      const payload = {
+        ...itemPayload,
+        basePrice: priceData?.basePrice || 0,
+        currency: priceData?.currency || 'IDR',
+        variants: variants.length > 0 ? variants : undefined,
+        videos: videos.length > 0 ? videos : undefined,
+      };
+
+      const res = await api.post('/items', payload);
+      const createdItem = res.data?.data || res.data;
+      const itemId = createdItem.id;
 
       if (images.length > 0) {
         const formData = new FormData();
         let primaryIdx = -1;
+        
         images.forEach((img, index) => {
           if (img.file) {
             formData.append('files', img.file);
             if (img.isPrimary) primaryIdx = index;
           }
         });
-        formData.append('itemId', currentId!.toString());
+
+        formData.append('itemId', itemId.toString());
         formData.append('primaryIndex', primaryIdx.toString());
+
         await api.post('/item-images/bulk-upload', formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
       }
 
-      if (videos.length > 0) {
-        const videoPromises = videos
-          .filter(vid => vid.url)
-          .map(vid => api.post('/item-videos', {
-            itemId: currentId,
-            url: vid.url,
-            provider: vid.provider,
-          }));
-        await Promise.all(videoPromises);
-      }
-
-      if (variants.length > 0) {
-        const variantPromises = variants.map(v => api.post('/item-variants', {
-          ...v,
-          itemId: currentId
-        }));
-        await Promise.all(variantPromises);
-      }
-
-      notifySuccess("Item, media, and variants saved successfully");
+      notifySuccess("Item and media saved successfully");
       router.push('/dashboard/items');
-    } catch (error) {
-      notifyError(error as Error);
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.message || "An error occurred";
+      notifyError(new Error(errorMsg));
     } finally {
       setLoading(false);
     }
@@ -104,7 +89,7 @@ export default function AddItemPage() {
     <div className={`${styles.wrapper} reveal-line`}>
       <div className={styles.header}>
         <h1 className={styles.title}>Add New Item</h1>
-        <p className={styles.subtitle}>Enter the basic details and manage item media & variants.</p>
+        <p className={styles.subtitle}>Define item details, inventory, and media in one place.</p>
       </div>
 
       <ItemForm 
@@ -119,8 +104,8 @@ export default function AddItemPage() {
               <div className={styles.dropdownHeader} onClick={() => setShowPriceForm(!showPriceForm)}>
                 <div className={styles.titleGroup}>
                   <Banknote size={18} className={styles.icon} />
-                  <h3 className={styles.sectionTitle}>Price Configuration</h3>
-                  <span className={styles.optionalBadge}>Optional</span>
+                  <h3 className={styles.sectionTitle}>Price & Inventory</h3>
+                  <span className={styles.optionalBadge}>Required</span>
                 </div>
                 {showPriceForm ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
               </div>
