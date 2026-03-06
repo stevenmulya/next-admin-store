@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/services/api';
 import { notifyError, notifySuccess } from '@/utils/toastHelper';
-import { Edit2, Trash2, ArrowUp, ArrowDown, Pin, Star, PinOff, StarOff } from 'lucide-react';
+import { Edit2, Trash2, ArrowUp, ArrowDown, Pin, Star, PinOff, StarOff, History, Percent } from 'lucide-react';
 import { DataTable } from '@/components/ui/DataTable';
 import { Toolbar } from '@/components/ui/Toolbar';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -24,6 +24,7 @@ export default function ItemListPage() {
   const [sortOrder, setSortOrder] = useState<'DESC' | 'ASC'>('DESC');
   
   const [pagination, setPagination] = useState({ page: 1, lastPage: 1, total: 0 });
+  const isFirstMount = useRef(true);
 
   const fetchFilters = useCallback(async () => {
     try {
@@ -77,9 +78,16 @@ export default function ItemListPage() {
   }, [fetchFilters]);
 
   useEffect(() => {
+    if (isFirstMount.current) {
+      fetchItems(1);
+      isFirstMount.current = false;
+      return;
+    }
+
     const delayDebounceFn = setTimeout(() => {
       fetchItems(1);
     }, 500);
+
     return () => clearTimeout(delayDebounceFn);
   }, [searchQuery, filterStatus, filterCategory, filterSubCategory, sortOrder, fetchItems]);
 
@@ -145,10 +153,15 @@ export default function ItemListPage() {
     });
   };
 
+  const formatCurrency = (amount: number, currency: string) => {
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: currency || 'IDR' }).format(amount);
+  };
+
   const headers = [
     'UID', 
     'IDENTIFIER', 
     'CATEGORY', 
+    'PRICE',
     'STATUS', 
     <div key="sort-trigger" className={styles.sortContainer} onClick={toggleSort}>
       <span className={styles.sortLabel}>SORT: {sortOrder === 'DESC' ? 'NEWEST' : 'OLDEST'}</span>
@@ -234,6 +247,29 @@ export default function ItemListPage() {
                 </div>
               </td>
               <td>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  {item.hasVariants ? (
+                    <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>Multiple Variants</span>
+                  ) : item.appliedRule ? (
+                    <>
+                      <span style={{ fontSize: '12px', textDecoration: 'line-through', color: 'var(--text-muted)' }}>
+                        {formatCurrency(item.price, item.currency)}
+                      </span>
+                      <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--success)' }}>
+                        {formatCurrency(item.finalPrice, item.currency)}
+                      </span>
+                      <span style={{ fontSize: '10px', padding: '2px 6px', backgroundColor: 'var(--badge-highlight-bg)', color: 'var(--badge-highlight-text)', borderRadius: '4px', width: 'fit-content', marginTop: '2px' }}>
+                        {item.appliedRule.name}
+                      </span>
+                    </>
+                  ) : (
+                    <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-main)' }}>
+                      {formatCurrency(item.price, item.currency)}
+                    </span>
+                  )}
+                </div>
+              </td>
+              <td>
                 <span className={`${styles.tag} ${getStatusColor(item.status)}`}>
                   {item.status}
                 </span>
@@ -243,6 +279,20 @@ export default function ItemListPage() {
               </td>
               <td className={styles.actionColumn}>
                 <div className={styles.actionGroup}>
+                  <button 
+                    className={styles.actionBtn} 
+                    onClick={() => router.push(`/dashboard/items/${item.id}/pricing`)}
+                    title="Manage Dynamic Pricing"
+                  >
+                    <Percent size={14} />
+                  </button>
+                  <button 
+                    className={styles.actionBtn} 
+                    onClick={() => router.push(`/dashboard/items/${item.id}/history`)}
+                    title="View History"
+                  >
+                    <History size={14} />
+                  </button>
                   <button 
                     className={styles.actionBtn} 
                     onClick={() => handleToggleHighlight(item.id, item.isHighlight, item.name)} 

@@ -8,8 +8,10 @@ import { ItemForm, ItemPayload } from '@/components/ui/form/ItemForm';
 import { ItemImageForm } from '@/components/ui/form/ItemImageForm';
 import { ItemVideoForm } from '@/components/ui/form/ItemVideoForm';
 import { ItemDefaultPriceForm } from '@/components/ui/form/ItemDefaultPriceForm';
+import { ItemQuantityForm } from '@/components/ui/form/ItemQuantityForm';
+import { ItemTagsForm } from '@/components/ui/form/ItemTagsForm';
 import { ItemVariantInputGroup, ItemVariantPayload } from '@/components/ui/form/ItemVariantInputGroup';
-import { ChevronDown, ChevronUp, ImagePlus, Loader2, Video, Banknote, Layers } from 'lucide-react';
+import { ChevronDown, ChevronUp, ImagePlus, Loader2, Video, Banknote, Layers, Package, Tags } from 'lucide-react';
 import styles from '../../add/page.module.css';
 
 export interface ImageUpload {
@@ -32,9 +34,40 @@ export interface PriceData {
   currency: string;
 }
 
+export interface QuantityData {
+  stock: number;
+  lowStock: number;
+}
+
 export interface ExistingVariant extends ItemVariantPayload {
   id?: number;
 }
+
+const CollapsibleSection = ({ 
+  title, 
+  icon: Icon, 
+  children, 
+  isOpen, 
+  onToggle 
+}: { 
+  title: string; 
+  icon: React.ElementType; 
+  children: React.ReactNode;
+  isOpen: boolean;
+  onToggle: () => void;
+}) => (
+  <div className={styles.imageSection}>
+    <div className={styles.dropdownHeader} onClick={onToggle}>
+      <div className={styles.titleGroup}>
+        <Icon size={18} className={styles.icon} />
+        <h3 className={styles.sectionTitle}>{title}</h3>
+        <span className={styles.optionalBadge}>Optional</span>
+      </div>
+      {isOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+    </div>
+    {isOpen && <div className={styles.dropdownContent}>{children}</div>}
+  </div>
+);
 
 export default function EditItemPage() {
   const router = useRouter();
@@ -44,16 +77,20 @@ export default function EditItemPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [itemData, setItemData] = useState<any>(null);
+  
+  const [itemMode, setItemMode] = useState<'SINGLE' | 'VARIANT'>('SINGLE');
+  const [openSection, setOpenSection] = useState<string | null>(null);
+
   const [images, setImages] = useState<ImageUpload[]>([]);
   const [videos, setVideos] = useState<VideoUpload[]>([]);
   const [variants, setVariants] = useState<ExistingVariant[]>([]);
-  const [initialVariants, setInitialVariants] = useState<ExistingVariant[]>([]);
+  const [tags, setTags] = useState<string[]>([]);
   const [priceData, setPriceData] = useState<PriceData | null>(null);
+  const [quantityData, setQuantityData] = useState<QuantityData | null>(null);
 
-  const [showImageUpload, setShowImageUpload] = useState(false);
-  const [showVideoUpload, setShowVideoUpload] = useState(false);
-  const [showPriceForm, setShowPriceForm] = useState(false);
-  const [showVariantForm, setShowVariantForm] = useState(false);
+  const toggleSection = (section: string) => {
+    setOpenSection(openSection === section ? null : section);
+  };
 
   useEffect(() => {
     if (!itemId) return;
@@ -71,17 +108,32 @@ export default function EditItemPage() {
           });
         }
 
-        if (data.variants) {
+        if (data.inventory) {
+          setQuantityData({
+            stock: data.inventory.stock,
+            lowStock: data.inventory.lowStock
+          });
+        }
+
+        if (data.variants && data.variants.length > 0) {
           const fetchedVariants = data.variants.map((v: any) => ({
             id: v.id,
             name: v.name,
             sku: v.sku,
             price: v.price ? Number(v.price) : undefined,
             stock: v.stock,
-            metadata: v.metadata
+            metadata: v.metadata,
+            isExisting: true
           }));
           setVariants(fetchedVariants);
-          setInitialVariants(fetchedVariants);
+          setItemMode('VARIANT');
+        } else {
+          setItemMode('SINGLE');
+        }
+
+        if (data.tags) {
+          const fetchedTags = data.tags.map((t: any) => typeof t === 'string' ? t : t.name);
+          setTags(fetchedTags);
         }
 
         if (data.images) {
@@ -116,42 +168,21 @@ export default function EditItemPage() {
 
     try {
       setSubmitting(true);
+      const isVariantMode = itemMode === 'VARIANT';
 
       const finalPayload = {
         ...itemPayload,
-        basePrice: priceData?.basePrice || 0,
-        currency: priceData?.currency || 'USD'
+        hasVariants: isVariantMode,
+        basePrice: !isVariantMode ? (priceData?.basePrice ?? 0) : 0,
+        currency: !isVariantMode ? (priceData?.currency ?? 'USD') : 'USD',
+        stock: !isVariantMode ? (quantityData?.stock ?? 0) : 0,
+        lowStock: !isVariantMode ? (quantityData?.lowStock ?? 5) : 5,
+        variants: isVariantMode ? variants : [],
+        videos: videos,
+        tags: tags
       };
 
       await api.patch(`/items/${itemId}`, finalPayload);
-
-      const currentVariantIds = variants.map(v => v.id).filter(Boolean);
-      const variantsToDelete = initialVariants.filter(v => !currentVariantIds.includes(v.id));
-
-      if (variantsToDelete.length > 0) {
-        const deletePromises = variantsToDelete.map(v => api.delete(`/item-variants/${v.id}`));
-        await Promise.all(deletePromises);
-      }
-
-      if (variants.length > 0) {
-        const variantPromises = variants.map(v => {
-          if (v.id) {
-            return api.patch(`/item-variants/${v.id}`, {
-              name: v.name,
-              sku: v.sku || null,
-              price: v.price ?? null,
-              stock: v.stock,
-              metadata: v.metadata
-            });
-          } else {
-            return api.post('/item-variants', {
-              ...v,
-              itemId: Number(itemId)
-            });
-          }
-        });
-        await Promise.all(variantPromises);
-      }
 
       const newImages = images.filter(img => !img.isExisting);
       if (newImages.length > 0) {
@@ -173,23 +204,11 @@ export default function EditItemPage() {
         });
       }
 
-      const newVideos = videos.filter(vid => !vid.isExisting);
-      if (newVideos.length > 0) {
-        const videoPromises = newVideos
-          .filter(vid => vid.url)
-          .map(vid => api.post('/item-videos', {
-            itemId: Number(itemId),
-            url: vid.url,
-            provider: vid.provider,
-          }));
-        
-        await Promise.all(videoPromises);
-      }
-
       notifySuccess("Item updated successfully");
       router.push('/dashboard/items');
-    } catch (error: any) {
-      notifyError(error.response?.data?.message || "Failed to update item");
+    } catch (error: unknown) {
+      const errorMsg = (error as any).response?.data?.message || "Failed to update item";
+      notifyError(new Error(errorMsg));
     } finally {
       setSubmitting(false);
     }
@@ -197,8 +216,8 @@ export default function EditItemPage() {
 
   if (loading) {
     return (
-      <div className={styles.loadingContainer}>
-        <Loader2 className="animate-spin" />
+      <div className={styles.loadingContainer} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '40px', color: 'var(--text-muted)' }}>
+        <Loader2 className="animate-spin" size={20} />
         <span>Loading item data...</span>
       </div>
     );
@@ -220,69 +239,94 @@ export default function EditItemPage() {
         styles={styles}
         extraContent={
           <>
-            <div className={styles.imageSection}>
-              <div className={styles.dropdownHeader} onClick={() => setShowPriceForm(!showPriceForm)}>
-                <div className={styles.titleGroup}>
-                  <Banknote size={20} className={styles.icon} />
-                  <h3 className={styles.sectionTitle}>Price Configuration</h3>
-                </div>
-                {showPriceForm ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-              </div>
-              {showPriceForm && (
-                <div className={styles.dropdownContent}>
+            <div className={styles.modeToggle}>
+              <button 
+                type="button" 
+                className={`${styles.modeBtn} ${itemMode === 'SINGLE' ? styles.modeBtnActive : ''}`}
+                onClick={() => setItemMode('SINGLE')}
+              >
+                Single Item
+              </button>
+              <button 
+                type="button" 
+                className={`${styles.modeBtn} ${itemMode === 'VARIANT' ? styles.modeBtnActive : ''}`}
+                onClick={() => setItemMode('VARIANT')}
+              >
+                Item with Variants
+              </button>
+            </div>
+
+            {itemMode === 'SINGLE' && (
+              <>
+                <CollapsibleSection 
+                  title="Item Price" 
+                  icon={Banknote} 
+                  isOpen={openSection === 'price'} 
+                  onToggle={() => toggleSection('price')}
+                >
                   <ItemDefaultPriceForm 
                     initialData={priceData} 
                     onChange={setPriceData} 
                     styles={styles} 
                   />
-                </div>
-              )}
-            </div>
+                </CollapsibleSection>
 
-            <div className={styles.imageSection}>
-              <div className={styles.dropdownHeader} onClick={() => setShowVariantForm(!showVariantForm)}>
-                <div className={styles.titleGroup}>
-                  <Layers size={20} className={styles.icon} />
-                  <h3 className={styles.sectionTitle}>Manage Item Variants</h3>
-                </div>
-                {showVariantForm ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-              </div>
-              {showVariantForm && (
-                <div className={styles.dropdownContent}>
-                  <ItemVariantInputGroup variants={variants} onChange={setVariants} styles={styles} />
-                </div>
-              )}
-            </div>
+                <CollapsibleSection 
+                  title="Item Inventory" 
+                  icon={Package} 
+                  isOpen={openSection === 'inventory'} 
+                  onToggle={() => toggleSection('inventory')}
+                >
+                  <ItemQuantityForm 
+                    initialData={quantityData}
+                    onChange={setQuantityData} 
+                    styles={styles} 
+                  />
+                </CollapsibleSection>
+              </>
+            )}
 
-            <div className={styles.imageSection}>
-              <div className={styles.dropdownHeader} onClick={() => setShowImageUpload(!showImageUpload)}>
-                <div className={styles.titleGroup}>
-                  <ImagePlus size={20} className={styles.icon} />
-                  <h3 className={styles.sectionTitle}>Manage Item Images</h3>
-                </div>
-                {showImageUpload ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-              </div>
-              {showImageUpload && (
-                <div className={styles.dropdownContent}>
-                  <ItemImageForm images={images} onChange={setImages} />
-                </div>
-              )}
-            </div>
+            {itemMode === 'VARIANT' && (
+              <CollapsibleSection 
+                title="Item Variants" 
+                icon={Layers} 
+                isOpen={openSection === 'variants'} 
+                onToggle={() => toggleSection('variants')}
+              >
+                <ItemVariantInputGroup variants={variants} onChange={setVariants} styles={styles} />
+              </CollapsibleSection>
+            )}
 
-            <div className={styles.imageSection}>
-              <div className={styles.dropdownHeader} onClick={() => setShowVideoUpload(!showVideoUpload)}>
-                <div className={styles.titleGroup}>
-                  <Video size={20} className={styles.icon} />
-                  <h3 className={styles.sectionTitle}>Manage Item Videos</h3>
-                </div>
-                {showVideoUpload ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-              </div>
-              {showVideoUpload && (
-                <div className={styles.dropdownContent}>
-                  <ItemVideoForm videos={videos} onChange={setVideos} />
-                </div>
-              )}
-            </div>
+            <CollapsibleSection 
+              title="Item Tags" 
+              icon={Tags} 
+              isOpen={openSection === 'tags'} 
+              onToggle={() => toggleSection('tags')}
+            >
+              <ItemTagsForm 
+                initialData={tags} 
+                onChange={setTags} 
+                styles={styles} 
+              />
+            </CollapsibleSection>
+
+            <CollapsibleSection 
+              title="Item Images" 
+              icon={ImagePlus} 
+              isOpen={openSection === 'images'} 
+              onToggle={() => toggleSection('images')}
+            >
+              <ItemImageForm images={images} onChange={setImages} />
+            </CollapsibleSection>
+
+            <CollapsibleSection 
+              title="Item Videos" 
+              icon={Video} 
+              isOpen={openSection === 'videos'} 
+              onToggle={() => toggleSection('videos')}
+            >
+              <ItemVideoForm videos={videos} onChange={setVideos} />
+            </CollapsibleSection>
           </>
         }
       />

@@ -38,7 +38,7 @@ export interface Category {
 }
 
 interface ItemFormProps {
-  initialData?: any;
+  initialData?: Record<string, any>;
   onSubmit: (data: ItemPayload) => void;
   loading: boolean;
   submitLabel: string;
@@ -47,7 +47,15 @@ interface ItemFormProps {
   styles: Record<string, string>;
 }
 
-export function ItemForm({ initialData, onSubmit, loading, submitLabel, onCancel, extraContent, styles }: ItemFormProps) {
+export function ItemForm({ 
+  initialData, 
+  onSubmit, 
+  loading, 
+  submitLabel, 
+  onCancel, 
+  extraContent, 
+  styles 
+}: ItemFormProps) {
   const [formData, setFormData] = useState<ItemFormState>({
     name: '',
     slug: '',
@@ -195,14 +203,30 @@ export function ItemForm({ initialData, onSubmit, loading, submitLabel, onCancel
               <label className={styles.label}>Item Name</label>
               <span className={styles.helper}>The official name of the item.</span>
             </div>
-            <input type="text" name="name" required className={styles.input} placeholder="Enter item name" value={formData.name} onChange={handleChange} />
+            <input 
+              type="text" 
+              name="name" 
+              required 
+              className={styles.input} 
+              placeholder="Enter item name" 
+              value={formData.name} 
+              onChange={handleChange} 
+            />
           </div>
           <div className={styles.field}>
             <div className={styles.labelBlock}>
               <label className={styles.label}>Slug Identifier</label>
               <span className={styles.helper}>Unique URL-friendly identifier.</span>
             </div>
-            <input type="text" name="slug" required className={styles.input} placeholder="item-slug-example" value={formData.slug} onChange={handleChange} />
+            <input 
+              type="text" 
+              name="slug" 
+              required 
+              className={styles.input} 
+              placeholder="Enter item slug" 
+              value={formData.slug} 
+              onChange={handleChange} 
+            />
           </div>
         </div>
 
@@ -213,8 +237,10 @@ export function ItemForm({ initialData, onSubmit, loading, submitLabel, onCancel
               <span className={styles.helper}>Select primary category.</span>
             </div>
             <select name="categoryId" className={styles.select} value={formData.categoryId} onChange={handleChange}>
-              <option value="">None / Uncategorized</option>
-              {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name.toUpperCase()}</option>)}
+              <option value="" disabled>Select category</option>
+              {categories.map(cat => (
+                <option key={cat.id} value={cat.id}>{cat.name.toUpperCase()}</option>
+              ))}
             </select>
           </div>
           <div className={styles.field}>
@@ -222,30 +248,38 @@ export function ItemForm({ initialData, onSubmit, loading, submitLabel, onCancel
               <label className={styles.label}>Subcategory</label>
               <span className={styles.helper}>Select specific subcategory.</span>
             </div>
-            <select name="subCategoryId" className={styles.select} value={formData.subCategoryId} onChange={handleChange} disabled={!formData.categoryId || subCategories.length === 0}>
-              <option value="">Select Subcategory</option>
-              {subCategories.map(sub => <option key={sub.id} value={sub.id}>{sub.name}</option>)}
+            <select 
+              name="subCategoryId" 
+              className={styles.select} 
+              value={formData.subCategoryId} 
+              onChange={handleChange} 
+              disabled={!formData.categoryId || subCategories.length === 0}
+            >
+              <option value="" disabled>Select subcategory</option>
+              {subCategories.map(sub => (
+                <option key={sub.id} value={sub.id}>{sub.name}</option>
+              ))}
             </select>
           </div>
         </div>
 
         {activeAttributes.length > 0 && (
-          <div className={styles.row} style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px dashed var(--border-color)' }}>
-            <div className={styles.field} style={{ width: '100%' }}>
+          <div className={styles.attributesContainer}>
+            <div className={styles.field}>
               <div className={styles.labelBlock}>
                 <label className={styles.label}>Category Attributes</label>
                 <span className={styles.helper}>Fill in the required category attributes.</span>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '16px', marginTop: '12px' }}>
+              <div className={styles.attributesGrid}>
                 {activeAttributes.map(attr => (
-                  <div key={attr.id} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-main)' }}>
+                  <div key={attr.id} className={styles.attributeItem}>
+                    <label className={styles.attributeLabel}>
                       {attr.key}
                     </label>
                     <input
                       type="text"
                       className={styles.input}
-                      placeholder={`Enter ${attr.key}...`}
+                      placeholder="Enter value"
                       value={attributeValues[attr.id] || ''}
                       onChange={(e) => handleAttributeChange(attr.id, e.target.value)}
                     />
@@ -256,7 +290,7 @@ export function ItemForm({ initialData, onSubmit, loading, submitLabel, onCancel
           </div>
         )}
 
-        <div className={styles.row} style={{ marginTop: '16px' }}>
+        <div className={styles.statusContainer}>
           <div className={styles.field}>
             <div className={styles.labelBlock}>
               <label className={styles.label}>Publish Status</label>
@@ -272,14 +306,26 @@ export function ItemForm({ initialData, onSubmit, loading, submitLabel, onCancel
 
         <div className={styles.checkboxGroup}>
           <label className={styles.checkboxLabel}>
-            <input type="checkbox" name="isPinned" checked={formData.isPinned} onChange={handleChange} className={styles.checkboxInput} />
+            <input 
+              type="checkbox" 
+              name="isPinned" 
+              checked={formData.isPinned} 
+              onChange={handleChange} 
+              className={styles.checkboxInput} 
+            />
             <div className={styles.checkboxText}>
               <span className={styles.label}>Pin Item</span>
               <span className={styles.helper}>Top of lists.</span>
             </div>
           </label>
           <label className={styles.checkboxLabel}>
-            <input type="checkbox" name="isHighlight" checked={formData.isHighlight} onChange={handleChange} className={styles.checkboxInput} />
+            <input 
+              type="checkbox" 
+              name="isHighlight" 
+              checked={formData.isHighlight} 
+              onChange={handleChange} 
+              className={styles.checkboxInput} 
+            />
             <div className={styles.checkboxText}>
               <span className={styles.label}>Highlight Item</span>
               <span className={styles.helper}>Special sections.</span>
@@ -292,7 +338,13 @@ export function ItemForm({ initialData, onSubmit, loading, submitLabel, onCancel
             <label className={styles.label}>Short Description</label>
             <span className={styles.helper}>Overview of features.</span>
           </div>
-          <textarea name="description" className={styles.textarea} placeholder="Describe the item here..." value={formData.description} onChange={handleChange} />
+          <textarea 
+            name="description" 
+            className={styles.textarea} 
+            placeholder="Enter item description" 
+            value={formData.description} 
+            onChange={handleChange} 
+          />
         </div>
       </div>
 
@@ -300,7 +352,9 @@ export function ItemForm({ initialData, onSubmit, loading, submitLabel, onCancel
 
       <div className={styles.footer}>
         <button type="button" onClick={onCancel} className={styles.cancelBtn}>Cancel</button>
-        <button type="submit" disabled={loading} className={styles.submitBtn}>{loading ? 'Processing...' : submitLabel}</button>
+        <button type="submit" disabled={loading} className={styles.submitBtn}>
+          {loading ? 'Processing...' : submitLabel}
+        </button>
       </div>
     </form>
   );

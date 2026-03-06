@@ -101,6 +101,10 @@ html, body {
   font-size: var(--font-md);
 }
 
+input, textarea, select, button {
+  font-family: inherit;
+}
+
 @keyframes revealLine {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }

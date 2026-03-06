@@ -16,7 +16,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [currentDateTime, setCurrentDateTime] = useState({ time: '', date: '' });
 
-  // Menggunakan 'as any' untuk mem-bypass error TypeScript saat mengecek wrapper 'data'
   const userData = (user as any)?.data || user;
   const userEmail = userData?.email || 'Unknown User';
   const userRole = (userData?.role || 'PERSONNEL').toString().toUpperCase();
