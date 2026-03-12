@@ -6,7 +6,6 @@ import { Plus, Trash2 } from 'lucide-react';
 export interface ItemVariantPayload {
   itemId?: number;
   name: string;
-  sku?: string;
   price?: number;
   stock: number;
   metadata?: Record<string, any>;
@@ -15,7 +14,6 @@ export interface ItemVariantPayload {
 export interface ItemVariantFormState {
   itemId: number | string;
   name: string;
-  sku: string;
   price: number | string;
   stock: number | string;
 }
@@ -49,7 +47,6 @@ export function ItemVariantForm({
   const [formData, setFormData] = useState<ItemVariantFormState>({
     itemId: fixedItemId || '',
     name: '',
-    sku: '',
     price: '',
     stock: 0,
   });
@@ -61,7 +58,6 @@ export function ItemVariantForm({
       setFormData({
         itemId: fixedItemId || initialData.itemId || '',
         name: initialData.name || '',
-        sku: initialData.sku || '',
         price: initialData.price ?? '',
         stock: initialData.stock ?? 0,
       });
@@ -117,7 +113,6 @@ export function ItemVariantForm({
       payload.itemId = fixedItemId;
     }
 
-    if (formData.sku.trim()) payload.sku = formData.sku.trim();
     if (formData.price !== '') payload.price = Number(formData.price);
 
     onSubmit(payload);
@@ -163,20 +158,6 @@ export function ItemVariantForm({
               className={styles.input} 
               placeholder="Enter variant name" 
               value={formData.name} 
-              onChange={handleChange} 
-            />
-          </div>
-          <div className={styles.field}>
-            <div className={styles.labelBlock}>
-              <label className={styles.label}>SKU (Optional)</label>
-              <span className={styles.helper}>Stock Keeping Unit identifier.</span>
-            </div>
-            <input 
-              type="text" 
-              name="sku" 
-              className={styles.input} 
-              placeholder="e.g., TS-RED-XL" 
-              value={formData.sku} 
               onChange={handleChange} 
             />
           </div>

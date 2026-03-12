@@ -5,7 +5,6 @@ import { Wand2, Trash2, Plus } from 'lucide-react';
 
 export interface ItemVariantPayload {
   name: string;
-  sku?: string;
   price?: number;
   stock: number;
   metadata?: Record<string, string>;
@@ -167,7 +166,6 @@ export function ItemVariantInputGroup({ variants, onChange, styles }: ItemVarian
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-hover)', color: 'var(--text-muted)' }}>
                   <th style={{ padding: '12px 16px', fontWeight: 600 }}>Variant Name</th>
-                  <th style={{ padding: '12px 16px', fontWeight: 600 }}>SKU</th>
                   <th style={{ padding: '12px 16px', fontWeight: 600 }}>Price Override</th>
                   <th style={{ padding: '12px 16px', fontWeight: 600, width: '120px' }}>Stock</th>
                   <th style={{ padding: '12px 16px', width: '50px', textAlign: 'center' }}>Action</th>
@@ -181,15 +179,6 @@ export function ItemVariantInputGroup({ variants, onChange, styles }: ItemVarian
                         type="text" 
                         value={v.name} 
                         onChange={(e) => handleUpdateVariant(i, 'name', e.target.value)}
-                        className={styles.input}
-                      />
-                    </td>
-                    <td style={{ padding: '12px 16px' }}>
-                      <input 
-                        type="text" 
-                        value={v.sku || ''} 
-                        placeholder="Auto/Empty"
-                        onChange={(e) => handleUpdateVariant(i, 'sku', e.target.value)}
                         className={styles.input}
                       />
                     </td>
